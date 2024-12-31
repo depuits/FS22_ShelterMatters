@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<modDesc descVersion="66">
+    <title>Shelter matters</title>
+    <description>
+        Applies passive damage to vehicles and tools when left outside sheds.
+    </description>
+    <author>Depuits</author>
+    <version>1.0.0.0</version>
+
+    <iconFilename>mod_logo.dds</iconFilename>
+    <multiplayer supported="true"/>
+
+    <extraSourceFiles>
+        <sourcefile filename="src/shelterMatters.lua"/>
+    </extraSourceFiles>
+</modDesc>
