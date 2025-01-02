@@ -1,4 +1,5 @@
-# ShelterMatters
+
+![ShelterMatters](mod_logo.png)
 
 **ShelterMatters** is a mod for Farming Simulator 22 that enhances the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear based on their location.
 
