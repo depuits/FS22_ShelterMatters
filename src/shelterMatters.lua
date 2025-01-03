@@ -1,23 +1,52 @@
-
 -- @Author: Depuits
 -- @Version: 1.0.0.0
-
 
 ShelterMatters = {};
 ShelterMatters.name = g_currentModName;
 ShelterMatters.modDirectory = g_currentModDirectory
---source(g_currentModDirectory .. "loadMaintenanceSettingsEvent.lua")
+
+addModEventListener(ShelterMatters);
 
 function ShelterMatters.init()
     Logging.info("[shelterMatters] registering mod functions")
-    Wearable.updateDamageAmount = Utils.overwrittenFunction(Wearable.updateDamageAmount, ShelterMatters.updateDamageAmount)
+    --Wearable.updateDamageAmount = Utils.overwrittenFunction(Wearable.updateDamageAmount, ShelterMatters.updateDamageAmount)
+
+    ShelterMatters.insideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/insideIcon.dds")
+    ShelterMatters.outsideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/outsideIcon.dds")
+end
+
+function ShelterMatters:draw()
+    local vehicle = g_currentMission.controlledVehicle
+    if vehicle then
+
+        local uiScale = g_gameSettings:getValue("uiScale")
+
+        --local startX = 1 - 0.0755 * uiScale + (0.04 * (uiScale - 0.5))
+        local startX = 1 - 0.0535 * uiScale + (0.04 * (uiScale - 0.5))
+        local startY = 0.05 * uiScale - (0.08 * (uiScale - 0.5))
+        local iconWidth = 0.01 * uiScale
+        local iconHeight = iconWidth * g_screenAspectRatio
+
+        local isInside = ShelterMatters.isInShed(vehicle)
+        local icon = isInside and ShelterMatters.insideIcon or ShelterMatters.outsideIcon
+
+        renderOverlay(icon, startX, startY, iconWidth, iconHeight)
+    end
+end
+
+function ShelterMatters:update(dt)
+    local weatherMultiplier = ShelterMatters.weatherMultiplier()
+
+    for _, vehicle in pairs(g_currentMission.vehicles) do
+        ShelterMatters.updateDamageAmount(vehicle, dt, weatherMultiplier)
+    end
 end
 
 function ShelterMatters.weatherMultiplier()
     local weatherSystem = g_currentMission.environment.weather
     local weatherType = weatherSystem:getCurrentWeatherType()
-    local weatherObject = weatherSystem.typeToWeatherObject[weatherType]
 
+    --local weatherObject = weatherSystem.typeToWeatherObject[weatherType]
     --DebugUtil.printTableRecursively(weatherObject, "Wheater: ", 0, 1)
 
     -- Map the weather type to a string
@@ -34,61 +63,48 @@ function ShelterMatters.weatherMultiplier()
     if weatherDescription == "RAIN" then
         -- Increase wear/damage when it's raining
         print("It's raining! Applying extra wear.")
+        return 10
     elseif weatherDescription == "SNOW" then
         -- Normal conditions
         print("It's snowing.")
+        return 5
     else
         -- Other weather types
         print("Weather: " .. weatherDescription)
+        return 1
     end
 end
 
-function ShelterMatters.updateDamageAmount(wearable, superFunc, dt)
-    local damage = wearable:getDamageAmount()
+function ShelterMatters.updateDamageAmount(vehicle, dt, multiplier)
+    if not SpecializationUtil.hasSpecialization(Wearable, vehicle.specializations) then
+        return
+    end
 
-    ShelterMatters.weatherMultiplier()
-
-    local inShed = ShelterMatters.isInShed(wearable)
-
-    local vx, vy, vz = getWorldTranslation(wearable.rootNode)
-
-    Logging.info("[shelterMatters] Entity type: " .. (wearable.typeName or "unknown"))
-    Logging.info("[shelterMatters] Entity name: " .. wearable:getFullName())
-    Logging.info("[shelterMatters] pos: " .. string.format("x %.2f, y %.2f, z %.2f", vx, vy, vz))
-    Logging.info("[shelterMatters] dmg: " .. tostring(damage))
-    Logging.info("[shelterMatters] active: " .. tostring(wearable.isActive))
-    Logging.info("[shelterMatters] operating: " .. tostring(wearable:getIsOperating()))
-    Logging.info("[shelterMatters] operatingtime: " .. tostring(wearable.operatingTime))
-    Logging.info("[shelterMatters] inshed: " .. tostring(inShed))
-
-    --getDamageAmount
-    --getVehicleDamage
-    -- isActive
-
-    -- Apply gradual damage if outside and in bad weather
-    --if self:isOutside() and self:isBadWeather() then
-    --end
+    Logging.info("[shelterMatters] Entity type: " .. (vehicle.typeName or "unknown"))
+    Logging.info("[shelterMatters] Entity name: " .. vehicle:getFullName())
+    Logging.info("[shelterMatters] dmg: " .. tostring(vehicle:getDamageAmount()))
+    Logging.info("[shelterMatters] active: " .. tostring(vehicle.isActive))
+    Logging.info("[shelterMatters] operating: " .. tostring(vehicle:getIsOperating()))
+    Logging.info("[shelterMatters] operatingtime: " .. tostring(vehicle.operatingTime))
 
     -- should be not active or not operating
-    if not wearable.isActive then
-        -- Example: Apply passive damage if outside a shed
-        if not inShed then
-            Logging.info(string.format("[shelterMatters] %s NOT shed with damage " .. (wearable.damage or "unknown"), wearable:getFullName()))
-            -- wearable.damage = math.min(wearable.damage + (0.0001 * dt), 1.0) -- Increment passive damage
-            -- setDamageAmount
-            -- addDamageAmount
-        else
-            Logging.info(string.format("[shelterMatters] %s in shed with damage " .. (wearable.damage or "unknown"), wearable:getFullName()))
-        end
-    else
-        Logging.info(string.format("[shelterMatters] %s in use, using default calculations", wearable:getFullName()))
+    if vehicle.isActive and vehicle:getIsOperating() then
+        Logging.info("[shelterMatters] in use, using default calculations")
+        return
     end
 
+    local inShed = ShelterMatters.isInShed(vehicle)
 
-    -- Call original update logic
-    return superFunc(wearable, dt)
+    if not inShed then
+        local baseOutsideDamage = 0.00001
+        local outsideDamage = (baseOutsideDamage * multiplier * dt) / 1000 -- divide by 1000 so values are dmg/second
+        Logging.info("[shelterMatters] NOT in shed: " .. tostring(outsideDamage))
+
+        vehicle:addDamageAmount(outsideDamage)
+    else
+        Logging.info("[shelterMatters] in shed ")
+    end
 end
-
 
 function ShelterMatters.isInShed(vehicle)
     for _, placeable in pairs(g_currentMission.placeableSystem.placeables) do
@@ -99,6 +115,26 @@ function ShelterMatters.isInShed(vehicle)
     return false
 end
 
+-- Function to check if a vehicle is inside any indoor area of a placeable
+function ShelterMatters.isVehicleInsideIndoorArea(vehicle, placeable)
+    if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
+        --Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. " has no indoor areas")
+        return false
+    end
+
+    -- Get the vehicle's position
+    local vx, vy, vz = getWorldTranslation(vehicle.rootNode)
+
+    -- Check all indoor areas
+    for _, indoorArea in ipairs(placeable.spec_indoorAreas.areas) do
+        if ShelterMatters.isPointInsideIndoorArea(vx, vy, vz, indoorArea, placeable) then
+            --Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. Vehicle is inside.")
+            return true
+        end
+    end
+
+    return false
+end
 
 -- Function to calculate distance between two points in 3D space
 local function calculateDistance(x1, y1, z1, x2, y2, z2)
@@ -147,8 +183,7 @@ function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
     local withinX = localX >= minX and localX <= maxX
     local withinZ = localZ >= minZ and localZ <= maxZ
 
-
-    local distance = calculateDistance(x, y, z, startX, startY, startZ)
+--[[    local distance = calculateDistance(x, y, z, startX, startY, startZ)
 
     if distance < 50 then
         Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. string.format(" Distance to Start Node: %.2f", distance))
@@ -165,81 +200,9 @@ function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
         print(string.format("Local Height: %.2f, %.2f", localHeightX, localHeightZ))
         print(string.format("Local Vehicle Position: %.2f, %.2f", localX, localZ))
         print(string.format("Bounds: X(%.2f, %.2f), Z(%.2f, %.2f)", minX, maxX, minZ, maxZ))
-    end
+    end]]
 
     return withinX and withinZ
 end
-
--- Function to check if a vehicle is inside any indoor area of a placeable
-function ShelterMatters.isVehicleInsideIndoorArea(vehicle, placeable)
-    if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
-        --Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. " has no indoor areas")
-        return false
-    end
-
-    -- Get the vehicle's position
-    local vx, vy, vz = getWorldTranslation(vehicle.rootNode)
-
-    -- Check all indoor areas
-    for _, indoorArea in ipairs(placeable.spec_indoorAreas.areas) do
-        if ShelterMatters.isPointInsideIndoorArea(vx, vy, vz, indoorArea, placeable) then
-            --Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. Vehicle is inside.")
-            return true
-        end
-    end
-
-    return false
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function ShelterMatters.isInsideBounds(x, y, z, placeable)
-    -- Get the rotation of the placeable
-    local placeableRotation = { getWorldRotation(placeable.rootNode) }
-    
-    -- Translate the vehicle position relative to the placeable's position
-    local placeableX, placeableY, placeableZ = getWorldTranslation(placeable.rootNode)
-    local localX, localY, localZ = worldToLocal(
-        placeable.rootNode,
-        x, y, z
-    )
-
-    DebugUtil.printTableRecursively(placeable, "[shelterMatters] placeable: ", 0, 1)
-
-    Logging.info("[shelterMatters] localX: " .. localX )
-    Logging.info("[shelterMatters] localZ: " .. localZ )
-
-    -- Get the bounding box of the placeable
-    local bounds = ShelterMatters.calculateBoundingBox(placeable.rootNode)
-
-
-    DebugUtil.printTableRecursively(bounds, "[shelterMatters] bounds: ", 0, 1)
-
-    -- Check if the vehicle's position in local space falls within the bounding box
-    if localX >= bounds.min.x and localX <= bounds.max.x and
-       localZ >= bounds.min.z and localZ <= bounds.max.z then
-        Logging.info("[shelterMatters] in shed: " .. (placeable.typeName or "unknown") )
-        return true
-    end
-
-    return false
-end
-
 
 ShelterMatters.init()
