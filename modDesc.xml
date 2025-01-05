@@ -6,7 +6,7 @@
         Applies passive damage to vehicles and tools when left outside sheds.
     </description>
     <author>Depuits</author>
-    <version>1.0.0.0</version>
+    <version>dev</version>
 
     <iconFilename>mod_logo.dds</iconFilename>
     <multiplayer supported="true"/>
