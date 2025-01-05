@@ -1,0 +1,81 @@
+name: Build and Deploy Farming Simulator Mod
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*' # Matches tags like v1.0.0, v1.1.2, etc.
+
+jobs:
+  build:
+    name: Build Mod
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Prepare the ZIP file
+      - name: Create ZIP Archive
+        run: |
+          MOD_NAME="ShelterMatters"
+          ZIP_NAME="FS22_${MOD_NAME}.zip"
+          zip -r $ZIP_NAME . -x ".git*" ".github/*" "*.DS_Store" "README.md"
+          echo "ZIP_FILE=$ZIP_NAME" >> $GITHUB_ENV
+
+      # Step 3: Upload ZIP as an artifact (for main branch)
+      - name: Upload ZIP Artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v3
+        with:
+          name: development-build
+          path: ${{ env.ZIP_FILE }}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Prepare the ZIP file
+      - name: Create ZIP Archive
+        run: |
+          MOD_NAME="ShelterMatters"
+          ZIP_NAME="FS22_${MOD_NAME}.zip"
+          zip -r $ZIP_NAME . -x ".git*" ".github/*" "*.DS_Store" "README.md"
+          echo "ZIP_FILE=$ZIP_NAME" >> $GITHUB_ENV
+
+      # Step 3: Create GitHub Release
+      - name: Create GitHub Release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const zipPath = process.env.ZIP_FILE;
+            const releaseName = `Release ${context.ref.replace('refs/tags/', '')}`;
+            const releaseTag = context.ref.replace('refs/tags/', '');
+            
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: releaseTag,
+              name: releaseName,
+              prerelease: false
+            });
+
+            const releaseId = release.data.id;
+
+            const zipFileContent = fs.readFileSync(zipPath);
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              name: zipPath,
+              data: zipFileContent
+            });
