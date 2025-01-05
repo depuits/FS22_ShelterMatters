@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*' # Matches tags like v1.0.0, v1.1.2, etc.
+      - 'v*' # Matches tags like v1.0.0.0, v1.1.0.2, etc.
 
 permissions:
   contents: write
@@ -20,7 +20,25 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Step 2: Prepare the ZIP file
+      # Step 2: Update modDesc.xml Version
+      - id: update_version
+        name: Update modDesc.xml Version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            # Development build version
+            VERSION="dev-$(date +'%Y%m%d-%H%M')"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            # Tagged release version
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            echo "Error: Unable to determine version."
+            exit 1
+          fi
+          
+          echo "Updating modDesc.xml to version $VERSION"
+          sed -i "s/<version>.*<\/version>/<version>${VERSION}<\/version>/" modDesc.xml
+
+      # Step 3: Prepare the ZIP file
       - name: Create ZIP Archive
         run: |
           MOD_NAME="ShelterMatters"
@@ -28,7 +46,7 @@ jobs:
           zip -r $ZIP_NAME . -x ".git*" ".github/*" "*.DS_Store" "README.md"
           echo "ZIP_FILE=$ZIP_NAME" >> $GITHUB_ENV
 
-      # Step 3: Determine deployment target
+      # Step 4: Determine deployment target
       - name: Set Release Details
         id: set-release
         run: |
