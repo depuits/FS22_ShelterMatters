@@ -76,7 +76,7 @@ jobs:
             const releaseTag = process.env.RELEASE_TAG;
             const isPreRelease = process.env.IS_PRERELEASE === 'true';
 
-            // Check if the development release already exists
+            // Check for an existing release
             const releases = await github.rest.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -84,18 +84,29 @@ jobs:
 
             let existingRelease = releases.data.find(release => release.tag_name === releaseTag);
 
-            if (!existingRelease) {
-              const release = await github.rest.repos.createRelease({
+            if (existingRelease) {
+              console.log(`Deleting existing release: ${releaseTag}`);
+              await github.rest.repos.deleteRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                tag_name: releaseTag,
-                name: releaseName,
-                prerelease: isPreRelease
+                release_id: existingRelease.id,
               });
             }
 
-            const releaseId = existingRelease.id || release.data.id;
+            // Create a new release
+            console.log(`Creating new release: ${releaseTag}`);
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: releaseTag,
+              name: releaseName,
+              prerelease: isPreRelease
+            });
 
+            const releaseId = release.data.id;
+
+            // Upload the ZIP file
+            console.log(`Uploading asset: ${zipPath}`);
             const zipFileContent = fs.readFileSync(zipPath);
             await github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
