@@ -3,12 +3,18 @@
 ShelterMatters = {};
 ShelterMatters.name = g_currentModName;
 ShelterMatters.modDirectory = g_currentModDirectory
+ShelterMatters.isDevBuild = true -- Default is true; overridden by the build process if not in dev mode.
 
 addModEventListener(ShelterMatters);
 
+function ShelterMatters.log(message, ...)
+    if PassiveDamage.isDevBuild then
+        Logging.info(string.format("[shelterMatters] " .. message, ...))
+    end
+end
+
 function ShelterMatters.init()
-    Logging.info("[shelterMatters] registering mod functions")
-    --Wearable.updateDamageAmount = Utils.overwrittenFunction(Wearable.updateDamageAmount, ShelterMatters.updateDamageAmount)
+    ShelterMatters.log("registering mod functions")
 
     ShelterMatters.insideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/insideIcon.dds")
     ShelterMatters.outsideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/outsideIcon.dds")
@@ -61,15 +67,15 @@ function ShelterMatters.weatherMultiplier()
 
     if weatherDescription == "RAIN" then
         -- Increase wear/damage when it's raining
-        print("It's raining! Applying extra wear.")
+        ShelterMatters.log("It's raining! Applying extra wear.")
         return 10
     elseif weatherDescription == "SNOW" then
         -- Normal conditions
-        print("It's snowing.")
+        ShelterMatters.log("It's snowing.")
         return 5
     else
         -- Other weather types
-        print("Weather: " .. weatherDescription)
+        ShelterMatters.log("Weather: %s, normal wear", weatherDescription)
         return 1
     end
 end
@@ -79,16 +85,16 @@ function ShelterMatters.updateDamageAmount(vehicle, dt, multiplier)
         return
     end
 
-    Logging.info("[shelterMatters] Entity type: " .. (vehicle.typeName or "unknown"))
-    Logging.info("[shelterMatters] Entity name: " .. vehicle:getFullName())
-    Logging.info("[shelterMatters] dmg: " .. tostring(vehicle:getDamageAmount()))
-    Logging.info("[shelterMatters] active: " .. tostring(vehicle.isActive))
-    Logging.info("[shelterMatters] operating: " .. tostring(vehicle:getIsOperating()))
-    Logging.info("[shelterMatters] operatingtime: " .. tostring(vehicle.operatingTime))
+    ShelterMatters.log("Entity type: " .. (vehicle.typeName or "unknown"))
+    ShelterMatters.log("Entity name: " .. vehicle:getFullName())
+    ShelterMatters.log("dmg: " .. tostring(vehicle:getDamageAmount()))
+    ShelterMatters.log("active: " .. tostring(vehicle.isActive))
+    ShelterMatters.log("operating: " .. tostring(vehicle:getIsOperating()))
+    ShelterMatters.log("operatingtime: " .. tostring(vehicle.operatingTime))
 
     -- should be not active or not operating
     if vehicle.isActive and vehicle:getIsOperating() then
-        Logging.info("[shelterMatters] in use, using default calculations")
+        ShelterMatters.log("in use, using default calculations")
         return
     end
 
@@ -100,11 +106,11 @@ function ShelterMatters.updateDamageAmount(vehicle, dt, multiplier)
         local baseOutsideDamage = 2 / 100 / 1000 / 60 / 60 -- this should result in 2% damage per hour of gameplay
         -- TODO edit logic so it uses in game hours instead of gameplay hours
         local outsideDamage = (baseOutsideDamage * multiplier * dt)
-        Logging.info("[shelterMatters] NOT in shed: " .. tostring(outsideDamage))
+        ShelterMatters.log("NOT in shed: " .. tostring(outsideDamage))
 
         vehicle:addDamageAmount(outsideDamage)
     else
-        Logging.info("[shelterMatters] in shed ")
+        ShelterMatters.log("in shed ")
     end
 end
 
@@ -190,18 +196,18 @@ function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
     if distance < 50 then
         Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. string.format(" Distance to Start Node: %.2f", distance))
 
-        print(string.format(" placeable rot: x %.2f, y %.2f, z %.2f", rotX, rotY, rotZ))
-        print(string.format(" start Node: x %.2f, y %.2f, z %.2f", startX, startY, startZ))
-        print(string.format(" width Node: x %.2f, y %.2f, z %.2f", widthX, widthY, widthZ))
-        print(string.format(" height Node: x %.2f, y %.2f, z %.2f", heightX, heightY, heightZ))
-        print("withinX: " .. tostring(withinX))
-        print("withinZ: " .. tostring(withinZ))
+        ShelterMatters.log(string.format(" placeable rot: x %.2f, y %.2f, z %.2f", rotX, rotY, rotZ))
+        ShelterMatters.log(string.format(" start Node: x %.2f, y %.2f, z %.2f", startX, startY, startZ))
+        ShelterMatters.log(string.format(" width Node: x %.2f, y %.2f, z %.2f", widthX, widthY, widthZ))
+        ShelterMatters.log(string.format(" height Node: x %.2f, y %.2f, z %.2f", heightX, heightY, heightZ))
+        ShelterMatters.log("withinX: " .. tostring(withinX))
+        ShelterMatters.log("withinZ: " .. tostring(withinZ))
 
-        print(string.format("Local Start: %.2f, %.2f", localStartX, localStartZ))
-        print(string.format("Local Width: %.2f, %.2f", localWidthX, localWidthZ))
-        print(string.format("Local Height: %.2f, %.2f", localHeightX, localHeightZ))
-        print(string.format("Local Vehicle Position: %.2f, %.2f", localX, localZ))
-        print(string.format("Bounds: X(%.2f, %.2f), Z(%.2f, %.2f)", minX, maxX, minZ, maxZ))
+        ShelterMatters.log(string.format("Local Start: %.2f, %.2f", localStartX, localStartZ))
+        ShelterMatters.log(string.format("Local Width: %.2f, %.2f", localWidthX, localWidthZ))
+        ShelterMatters.log(string.format("Local Height: %.2f, %.2f", localHeightX, localHeightZ))
+        ShelterMatters.log(string.format("Local Vehicle Position: %.2f, %.2f", localX, localZ))
+        ShelterMatters.log(string.format("Bounds: X(%.2f, %.2f), Z(%.2f, %.2f)", minX, maxX, minZ, maxZ))
     end]]
 
     return withinX and withinZ
