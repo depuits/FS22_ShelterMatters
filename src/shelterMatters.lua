@@ -23,7 +23,6 @@ end
 function ShelterMatters:draw()
     local vehicle = g_currentMission.controlledVehicle
     if vehicle then
-
         local uiScale = g_gameSettings:getValue("uiScale")
 
         local startX = 1 - 0.0535 * uiScale + (0.04 * (uiScale - 0.5))
@@ -39,6 +38,10 @@ function ShelterMatters:draw()
 end
 
 function ShelterMatters:update(dt)
+    if not g_currentMission:getIsServer() then
+        return -- Skip on clients
+    end
+    
     local weatherMultiplier = ShelterMatters.weatherMultiplier()
 
     for _, vehicle in pairs(g_currentMission.vehicles) do
