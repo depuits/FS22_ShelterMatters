@@ -37,8 +37,15 @@ jobs:
           
           echo "Updating modDesc.xml to version $VERSION"
           sed -i "s/<version>.*<\/version>/<version>${VERSION}<\/version>/" modDesc.xml
-
-      # Step 3: Prepare the ZIP file
+          
+      # Step 3: Update global isDevBuild
+      - name: Configure Dev or Release Mode
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            sed -i 's/ShelterMatters.isDevBuild = true/ShelterMatters.isDevBuild = false/' src/shelterMatters.lua
+          fi
+          
+      # Step 4: Prepare the ZIP file
       - name: Create ZIP Archive
         run: |
           MOD_NAME="ShelterMatters"
@@ -46,7 +53,7 @@ jobs:
           zip -r $ZIP_NAME . -x ".git*" ".github/*" "*.DS_Store" "README.md"
           echo "ZIP_FILE=$ZIP_NAME" >> $GITHUB_ENV
 
-      # Step 4: Determine deployment target
+      # Step 5: Determine deployment target
       - name: Set Release Details
         id: set-release
         run: |
@@ -65,7 +72,7 @@ jobs:
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
           echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
 
-      # Step 5: Create Release on GitHub
+      # Step 6: Create Release on GitHub
       - name: Create GitHub Release
         uses: actions/github-script@v6
         with:
