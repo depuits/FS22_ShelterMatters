@@ -72,6 +72,21 @@ jobs:
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
           echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
 
+      - name: Delete dev-latest Tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+
+          # Fetch all tags to ensure they are available locally
+          git fetch --prune origin +refs/tags/*:refs/tags/*
+
+          # Delete the tag locally if it exists
+          git tag -d "${{ env.RELEASE_TAG }}" || echo "Tag ${{ env.RELEASE_TAG }} not found locally."
+
+          # Delete the tag remotely if it exists
+          git push origin :refs/tags/${{ env.RELEASE_TAG }}" || echo "Tag ${{ env.RELEASE_TAG }} not found remotely."
+
       # Step 6: Create Release on GitHub
       - name: Create GitHub Release
         uses: actions/github-script@v6
