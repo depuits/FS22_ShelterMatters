@@ -23,54 +23,45 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      showguides="true"
-     inkscape:zoom="3.376318"
-     inkscape:cx="39.243934"
-     inkscape:cy="27.840979"
+     inkscape:zoom="0.47653789"
+     inkscape:cx="-144.79436"
+     inkscape:cy="83.938761"
      inkscape:window-width="1239"
      inkscape:window-height="1031"
-     inkscape:window-x="600"
-     inkscape:window-y="78"
+     inkscape:window-x="2176"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg1">
     <sodipodi:guide
-       position="32,28.04912"
+       position="252.25309,337.02687"
        orientation="-1,0"
        id="guide2"
        inkscape:locked="false"
        inkscape:label=""
        inkscape:color="rgb(0,134,229)" />
   </sodipodi:namedview>
-  <rect
-     width="64"
-     height="64"
-     fill="limegreen"
-     id="rect1" />
-  <polygon
-     points="16,32 32,16 48,32 48,48 16,48"
-     fill="white"
-     id="polygon1" />
-  <text
-     x="32"
-     y="58"
-     font-size="10"
-     font-family="Arial"
-     fill="white"
-     text-anchor="middle"
-     id="text1">
-        Inside
-    </text>
-  <rect
-     style="fill:#32cd32;fill-opacity:1;stroke:none;stroke-width:11.339;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:none"
-     id="rect2"
-     width="10"
-     height="10"
-     x="27"
-     y="34" />
-  <rect
-     style="fill:#ffffff;fill-opacity:1;stroke:#32cd32;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
-     id="rect2-6"
-     width="10"
-     height="10"
-     x="27"
-     y="34.5" />
+  <g
+     id="g1"
+     transform="matrix(1.25,0,0,1.25,-8,-8)">
+    <polygon
+       points="48,48 16,48 16,32 32,16 48,32 "
+       fill="white"
+       id="polygon1"
+       style="fill:#32cd32;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="fill:#32cd32;fill-opacity:1;stroke:#ffffff;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       id="rect2-6"
+       width="10"
+       height="10"
+       x="27"
+       y="34.5" />
+    <rect
+       style="fill:none;stroke:none;stroke-width:1.18688;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke markers fill"
+       id="rect1"
+       width="64"
+       height="64"
+       x="0"
+       y="0"
+       inkscape:label="bounds" />
+  </g>
 </svg>

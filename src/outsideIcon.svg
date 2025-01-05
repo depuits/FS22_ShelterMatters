@@ -22,39 +22,37 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="4.7815981"
-     inkscape:cx="28.337806"
-     inkscape:cy="33.670751"
-     inkscape:window-width="1239"
+     inkscape:zoom="0.45998747"
+     inkscape:cx="-223.91914"
+     inkscape:cy="180.4397"
+     inkscape:window-width="1834"
      inkscape:window-height="1031"
-     inkscape:window-x="2530"
-     inkscape:window-y="38"
+     inkscape:window-x="76"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg1" />
-  <rect
-     width="64"
-     height="64"
-     fill="red"
-     id="rect1" />
-  <polygon
-     points="16,32 32,16 48,32 48,48 16,48"
-     fill="white"
-     id="polygon1" />
-  <text
-     x="32"
-     y="58"
-     font-size="10"
-     font-family="Arial"
-     fill="white"
-     text-anchor="middle"
-     id="text1">
-        Outside
-    </text>
-  <rect
-     style="fill:#ffffff;fill-opacity:1;stroke:#ff0000;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
-     id="rect2"
-     width="10"
-     height="10"
-     x="8"
-     y="34.5" />
+  <g
+     id="g1"
+     transform="matrix(1.25,0,0,1.25,-8,-8)">
+    <polygon
+       points="48,48 16,48 16,32 32,16 48,32 "
+       fill="white"
+       id="polygon1"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-width:2;stroke-dasharray:none" />
+    <rect
+       style="fill:#ff0000;fill-opacity:1;stroke:#ffffff;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       id="rect2"
+       width="10"
+       height="10"
+       x="8"
+       y="34.5" />
+    <rect
+       style="fill:none;stroke:none;stroke-width:1.18688;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke markers fill"
+       id="rect1"
+       width="64"
+       height="64"
+       x="0"
+       y="0"
+       inkscape:label="bounds" />
+  </g>
 </svg>

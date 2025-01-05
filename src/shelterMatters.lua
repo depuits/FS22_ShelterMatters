@@ -1,5 +1,4 @@
 -- @Author: Depuits
--- @Version: 1.0.0.0
 
 ShelterMatters = {};
 ShelterMatters.name = g_currentModName;
@@ -21,7 +20,6 @@ function ShelterMatters:draw()
 
         local uiScale = g_gameSettings:getValue("uiScale")
 
-        --local startX = 1 - 0.0755 * uiScale + (0.04 * (uiScale - 0.5))
         local startX = 1 - 0.0535 * uiScale + (0.04 * (uiScale - 0.5))
         local startY = 0.05 * uiScale - (0.08 * (uiScale - 0.5))
         local iconWidth = 0.01 * uiScale
@@ -50,10 +48,11 @@ function ShelterMatters.weatherMultiplier()
     --DebugUtil.printTableRecursively(weatherObject, "Wheater: ", 0, 1)
 
     -- Map the weather type to a string
+    -- TODO debug if these values are correct
     local weatherTypes = {
         [1] = "SUNNY",
-        [2] = "RAIN",
-        [3] = "CLOUDY",
+        [2] = "CLOUDY",
+        [3] = "RAIN",
         [4] = "FOG",
         [5] = "SNOW",
     }
@@ -96,8 +95,11 @@ function ShelterMatters.updateDamageAmount(vehicle, dt, multiplier)
     local inShed = ShelterMatters.isInShed(vehicle)
 
     if not inShed then
-        local baseOutsideDamage = 0.00001
-        local outsideDamage = (baseOutsideDamage * multiplier * dt) / 1000 -- divide by 1000 so values are dmg/second
+        -- damage percentage per hour of gameplay
+        -- value / percentage / millis / seconds / minutes
+        local baseOutsideDamage = 2 / 100 / 1000 / 60 / 60 -- this should result in 2% damage per hour of gameplay
+        -- TODO edit logic so it uses in game hours instead of gameplay hours
+        local outsideDamage = (baseOutsideDamage * multiplier * dt)
         Logging.info("[shelterMatters] NOT in shed: " .. tostring(outsideDamage))
 
         vehicle:addDamageAmount(outsideDamage)

@@ -3,7 +3,7 @@
 <modDesc descVersion="66">
     <title>Shelter matters</title>
     <description>
-        Applies passive damage to vehicles and tools when left outside sheds.
+        Applies passive damage to vehicles and tools when left outside.
     </description>
     <author>Depuits</author>
     <version>dev</version>
