@@ -48,9 +48,6 @@ function ShelterMatters.log(message, ...)
     end
 end
 
-function ShelterMatters:onLoad()
-    ShelterMatters.log("onLoad")
-end
 function ShelterMatters:loadMap(name)
     ShelterMatters.log("loadMap: " .. name)
    -- g_currentMission:addCommand("sm_listDamageRates", "List all damage rates", self, self.listDamageRates)
