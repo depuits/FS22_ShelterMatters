@@ -7,15 +7,35 @@ ShelterMatters.lastUpdateInGameTime = nil -- Global variable to track the last u
 
 -- default values for weather multipliers
 ShelterMatters.weatherMultipliers = {
-    SUNNY = 1,
-    CLOUDY = 1,
-    FOG = 1.5,
-    SNOW = 5,
-    RAIN = 10,
+    SUNNY  = 1.0, -- Normal wear. Vehicles experience no additional wear in sunny conditions.
+    CLOUDY = 1.0, -- Normal wear. Cloudy weather has no impact on wear rates.
+    FOG    = 1.5, -- Increased wear. Moisture in the air leads to slightly accelerated wear.
+    SNOW   = 2.0, -- Increased wear. Freezing and thawing cycles cause more significant wear.
+    RAIN   = 5.0  -- Severe increase in wear. Constant moisture can cause rust and damage quickly.
 }
 
+-- percentage of damage added to vehicle per game year
 ShelterMatters.damageRates = {
-    default = 10, -- Default damage rate
+    default = 10,   -- 10% damage per in-game year when left outside. 
+                    -- Represents general wear and tear for most vehicles.
+    tractor = 10,            -- 10% damage per in-game year. Tractors are durable but still wear down from exposure.
+    combineHarvester = 20,   -- 20% damage per in-game year. Harvesters are complex machines and wear more quickly outdoors.
+    plow = 15,               -- 15% damage per in-game year. Plows are exposed to elements and have high wear due to frequent use.
+    seeder = 12,             -- 12% damage per in-game year. Seeders are moderately complex and exposed to moisture.
+    harvester = 20,          -- 20% damage per in-game year. Similar to combine harvesters, they have a lot of moving parts.
+    cultivator = 10,         -- 10% damage per in-game year. Cultivators are exposed to the weather but not as fragile as seeders.
+    baler = 15,              -- 15% damage per in-game year. Balers experience wear due to the outdoor environment and usage.
+    mower = 10,              -- 10% damage per in-game year. Mowers experience some wear but are typically more robust.
+    sprayer = 12,            -- 12% damage per in-game year. Sprayers are delicate and prone to wear when exposed to elements.
+    windrower = 10,          -- 10% damage per in-game year. Windrowers are generally durable, but moisture affects them.
+    fertilizerSpreader = 10, -- 10% damage per in-game year. Fertilizer spreaders are susceptible to wear but not highly fragile.
+    slurrySpreader = 15,     -- 15% damage per in-game year. Similar to fertilizer spreaders, but with more components exposed to the elements.
+    manureSpreader = 15,     -- 15% damage per in-game year. Similar to slurry spreaders, susceptible to rust and wear.
+    seedDrill = 12,          -- 12% damage per in-game year. Seed drills experience wear from being outdoors for long periods.
+    stonePicker = 10,        -- 10% damage per in-game year. Stone pickers are durable but still affected by weather.
+    vehicle = 10,            -- 10% damage per in-game year. General vehicle category; typical wear and tear from outdoor exposure.
+    transport = 5,           -- 5% damage per in-game year. Transport vehicles experience minimal wear outdoors.
+    balerWrapper = 10,       -- 10% damage per in-game year. Bale wrappers experience moderate wear from exposure to weather.
 }
 
 ShelterMatters.isDevBuild = true -- Default is true; overridden by the build process if not in dev mode.
@@ -28,8 +48,13 @@ function ShelterMatters.log(message, ...)
     end
 end
 
+function ShelterMatters:onLoad()
+    ShelterMatters.log("onLoad")
+end
 function ShelterMatters:loadMap(name)
-    ShelterMatters.log("loading map")
+    ShelterMatters.log("loadMap")
+    g_currentMission:addCommand("sm_listDamageRates", "List all damage rates", self, self.listDamageRates)
+    g_currentMission:addCommand("sm_listWeatherMultipliers", "List all weather multipliers", self, self.listWeatherMultipliers)
 end
 
 function ShelterMatters.init()
@@ -289,6 +314,12 @@ function ShelterMatters:saveConfig()
 
     local xmlFile = createXMLFile("ShelterMattersConfig", configFile, "ShelterMatters")
 
+
+
+    --[[for typeName, rate in pairs(self.damageRates) do
+        setXMLFloat(xmlFile, string.format("ShelterMatters.damageRates.%s", typeName), rate)
+    end]]
+    
     local i = 0
     for typeName, rate in pairs(self.damageRates) do
         local key = string.format("ShelterMatters.damageRates.type(%d)", i)
@@ -313,8 +344,14 @@ end
 
 function ShelterMatters:loadConfig()
     local configFile = self:getSavegameConfigPath()
-    if not configFile or not fileExists(configFile) then
+    if not configFile then
+        Logging.warning("[shelterMatters] Unable to save config: Savegame directory not found.")
+        return
+    end
+
+    if not fileExists(configFile) then
         ShelterMatters.log("Configuration file not found. Using defaults.")
+        self:saveConfig()
         return
     end
 
@@ -370,16 +407,18 @@ function ShelterMatters:changeDamageRate(typeName, newRate)
     -- Validate the input
     newRate = tonumber(newRate)
     if not newRate or newRate < 0 then
-        ShelterMatters.log("Invalid damage rate. Must be a positive number.")
+        print("Invalid damage rate. Must be a positive number.")
         return
     end
 
     -- Update the rate
     self.damageRates[typeName] = newRate
-    ShelterMatters.log("Updated damage rate for type '%s' to %.1f", typeName, newRate)
+    print("Updated damage rate for type '%s' to %.1f", typeName, newRate)
 
     -- Save the updated configuration
     self:saveConfig()
+
+    ShelterMattersSyncEvent.sendToClients()
 end
 
 function ShelterMatters:changeWeatherMultiplier(weatherType, newMultiplier)
@@ -390,16 +429,34 @@ function ShelterMatters:changeWeatherMultiplier(weatherType, newMultiplier)
     -- Validate the input
     newMultiplier = tonumber(newMultiplier)
     if not newMultiplier or newMultiplier < 0 then
-        ShelterMatters.log("Invalid multiplier. Must be a positive number.")
+        print("Invalid multiplier. Must be a positive number.")
         return
     end
 
     -- Update the rate
     self.weatherMultipliers[weatherType] = newMultiplier
-    ShelterMatters.log("Updated weather multiplier for type '%s' to %.2f", weatherType, newMultiplier)
+    print("Updated weather multiplier for type '%s' to %.2f", weatherType, newMultiplier)
 
     -- Save the updated configuration
     self:saveConfig()
+
+    ShelterMattersSyncEvent.sendToClients()
+end
+
+function ShelterMatters:listDamageRates()
+    print("=== Current Damage Rates ===")
+    for typeName, rate in pairs(self.damageRates) do
+        print(string.format("Type: %s, Rate: %.2f", typeName, rate))
+    end
+    print("=== End of List ===")
+end
+
+function ShelterMatters:listWeatherMultipliers()
+    print("=== Current Weather Multipliers ===")
+    for weatherType, multiplier in pairs(self.weatherMultipliers) do
+        print(string.format("Weather: %s, Multiplier: %.2f", weatherType, multiplier))
+    end
+    print("=== End of List ===")
 end
 
 function ShelterMatters:onChatCommand(command, arguments, playerId)
@@ -412,15 +469,28 @@ function ShelterMatters:onChatCommand(command, arguments, playerId)
         if g_currentMission.userManager:getUserByUserId(playerId).isAdmin then
             self:changeDamageRate(typeName, newRate)
         else
-            ShelterMatters.log("You do not have permission to execute this command.")
+            print("You do not have permission to execute this command.")
         end
     elseif command == "sm_setWeatherMultiplier" then
         local weatherType, newMultiplier = unpack(arguments)
         if g_currentMission.userManager:getUserByUserId(playerId).isAdmin then
             self:changeWeatherMultiplier(weatherType, newMultiplier)
         else
-            ShelterMatters.log("You do not have permission to execute this command.")
+            print("You do not have permission to execute this command.")
         end
+    elseif command == "sm_listDamageRates" then
+        self:listDamageRates()
+        return true
+    elseif command == "sm_listWeatherMultipliers" then
+        self:listWeatherMultipliers()
+        return true
+    end
+end
+
+
+function ShelterMatters:onPlayerJoined()
+    if g_server then
+        g_server:broadcastEvent(ShelterMattersSyncEvent.new(self.damageRates, self.weatherMultipliers), true, nil, g_server.clientConnections)
     end
 end
 
