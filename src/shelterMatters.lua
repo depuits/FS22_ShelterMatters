@@ -52,13 +52,9 @@ function ShelterMatters:onLoad()
     ShelterMatters.log("onLoad")
 end
 function ShelterMatters:loadMap(name)
-    ShelterMatters.log("loadMap")
-    g_currentMission:addCommand("sm_listDamageRates", "List all damage rates", self, self.listDamageRates)
-    g_currentMission:addCommand("sm_listWeatherMultipliers", "List all weather multipliers", self, self.listWeatherMultipliers)
-end
-
-function ShelterMatters.init()
-    ShelterMatters.log("registering mod functions")
+    ShelterMatters.log("loadMap: " .. name)
+   -- g_currentMission:addCommand("sm_listDamageRates", "List all damage rates", self, self.listDamageRates)
+    --g_currentMission:addCommand("sm_listWeatherMultipliers", "List all weather multipliers", self, self.listWeatherMultipliers)
 
     ShelterMatters.insideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/insideIcon.dds")
     ShelterMatters.outsideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/outsideIcon.dds")
@@ -185,7 +181,7 @@ function ShelterMatters:getDamageRate(vehicle)
     local damageRate = self.damageRates[typeName] or self.damageRates.default
 
     -- calculate float percentage = value / percentage / hours / days / months
-    local damageRateScaled = damageRate / 100 / 24 / g_currentMission.environment.daysPerMonth / 12
+    local damageRateScaled = damageRate / 100 / 24 / g_currentMission.environment.daysPerPeriod / 12
     return damageRateScaled
 end
 
@@ -493,5 +489,3 @@ function ShelterMatters:onPlayerJoined()
         g_server:broadcastEvent(ShelterMattersSyncEvent.new(self.damageRates, self.weatherMultipliers), true, nil, g_server.clientConnections)
     end
 end
-
-ShelterMatters.init()
