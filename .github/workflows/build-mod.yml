@@ -50,7 +50,7 @@ jobs:
         run: |
           MOD_NAME="ShelterMatters"
           ZIP_NAME="FS22_${MOD_NAME}.zip"
-          zip -r $ZIP_NAME . -x ".git*" ".github/*" "*.DS_Store" "README.md"
+          zip -r $ZIP_NAME . -x ".git*" ".github/*" "*.DS_Store" "*.jpg" "*.svg" "*.png" "README.md"
           echo "ZIP_FILE=$ZIP_NAME" >> $GITHUB_ENV
 
       # Step 5: Determine deployment target
