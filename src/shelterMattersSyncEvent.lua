@@ -54,3 +54,6 @@ end
 function ShelterMattersSyncEvent.sendToClients()
     g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.damageRates, ShelterMatters.weatherMultipliers))
 end
+
+-- Make the event available on both client and server
+InitEventClass(ShelterMattersSyncEvent, "ShelterMattersSyncEvent")

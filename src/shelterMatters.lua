@@ -5,13 +5,15 @@ ShelterMatters.name = g_currentModName
 ShelterMatters.modDirectory = g_currentModDirectory
 ShelterMatters.lastUpdateInGameTime = nil -- Global variable to track the last update time
 
+ShelterMatters.isDevBuild = true -- Default is true; overridden by the build process if not in dev mode.
+
 -- default values for weather multipliers
 ShelterMatters.weatherMultipliers = {
-    SUNNY  = 1.0, -- Normal wear. Vehicles experience no additional wear in sunny conditions.
-    CLOUDY = 1.0, -- Normal wear. Cloudy weather has no impact on wear rates.
-    FOG    = 1.5, -- Increased wear. Moisture in the air leads to slightly accelerated wear.
-    SNOW   = 2.0, -- Increased wear. Freezing and thawing cycles cause more significant wear.
-    RAIN   = 5.0  -- Severe increase in wear. Constant moisture can cause rust and damage quickly.
+    sunny  = 1.0, -- normal wear. vehicles experience no additional wear in sunny conditions.
+    cloudy = 1.0, -- normal wear. cloudy weather has no impact on wear rates.
+    fog    = 1.5, -- increased wear. moisture in the air leads to slightly accelerated wear.
+    snow   = 2.0, -- increased wear. freezing and thawing cycles cause more significant wear.
+    rain   = 5.0  -- severe increase in wear. constant moisture can cause rust and damage quickly.
 }
 
 -- percentage of damage added to vehicle per game year
@@ -19,6 +21,7 @@ ShelterMatters.damageRates = {
     default = 10,   -- 10% damage per in-game year when left outside. 
                     -- Represents general wear and tear for most vehicles.
     tractor = 10,            -- 10% damage per in-game year. Tractors are durable but still wear down from exposure.
+    car = 10,                -- 10% damage per in-game year. Cars are durable but still wear down from exposure.
     combineHarvester = 20,   -- 20% damage per in-game year. Harvesters are complex machines and wear more quickly outdoors.
     plow = 15,               -- 15% damage per in-game year. Plows are exposed to elements and have high wear due to frequent use.
     seeder = 12,             -- 12% damage per in-game year. Seeders are moderately complex and exposed to moisture.
@@ -35,10 +38,9 @@ ShelterMatters.damageRates = {
     stonePicker = 10,        -- 10% damage per in-game year. Stone pickers are durable but still affected by weather.
     vehicle = 10,            -- 10% damage per in-game year. General vehicle category; typical wear and tear from outdoor exposure.
     transport = 5,           -- 5% damage per in-game year. Transport vehicles experience minimal wear outdoors.
+    trailer = 5,             -- 5% damage per in-game year. Trailers experience minimal wear outdoors.
     balerWrapper = 10,       -- 10% damage per in-game year. Bale wrappers experience moderate wear from exposure to weather.
 }
-
-ShelterMatters.isDevBuild = true -- Default is true; overridden by the build process if not in dev mode.
 
 addModEventListener(ShelterMatters)
 
@@ -50,26 +52,45 @@ end
 
 function ShelterMatters:loadMap(name)
     ShelterMatters.log("loadMap: " .. name)
-   -- g_currentMission:addCommand("sm_listDamageRates", "List all damage rates", self, self.listDamageRates)
-    --g_currentMission:addCommand("sm_listWeatherMultipliers", "List all weather multipliers", self, self.listWeatherMultipliers)
 
     ShelterMatters.insideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/insideIcon.dds")
     ShelterMatters.outsideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/outsideIcon.dds")
 
     if g_currentMission:getIsServer() then
+        FSCareerMissionInfo.saveToXMLFile = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile, ShelterMatters.save)
+   
         self:loadConfig()
     end
 end
 
+function ShelterMatters.save()
+    if g_currentMission:getIsServer() then
+        ShelterMatters:saveConfig()
+    end
+end
+
+
 function ShelterMatters:draw()
     local vehicle = g_currentMission.controlledVehicle
     if vehicle then
+
         local uiScale = g_gameSettings:getValue("uiScale")
 
         local startX = 1 - 0.0535 * uiScale + (0.04 * (uiScale - 0.5))
         local startY = 0.05 * uiScale - (0.08 * (uiScale - 0.5))
         local iconWidth = 0.01 * uiScale
         local iconHeight = iconWidth * g_screenAspectRatio
+
+
+        local childVehicles = vehicle.rootVehicle.childVehicles
+
+        for i = 1, #childVehicles do
+            local childVehicle = childVehicles[i]
+
+            if childVehicle.getIsSelected ~= nil and childVehicle:getIsSelected() then
+                vehicle = childVehicle
+            end
+        end
 
         local isInside = ShelterMatters.isInShed(vehicle)
         local icon = isInside and ShelterMatters.insideIcon or ShelterMatters.outsideIcon
@@ -118,7 +139,7 @@ function ShelterMatters:update(dt)
     end
 end
 
-function ShelterMatters:weatherMultiplier()
+function ShelterMatters:weatherMultiplier(debugPrint)
     local weatherSystem = g_currentMission.environment.weather
     local weatherType = weatherSystem:getCurrentWeatherType()
 
@@ -128,18 +149,39 @@ function ShelterMatters:weatherMultiplier()
     -- Map the weather type to a string
     -- TODO debug if these values are correct
     local weatherTypes = {
-        [1] = "SUNNY",
-        [2] = "CLOUDY",
-        [3] = "RAIN",
-        [4] = "FOG",
-        [5] = "SNOW",
+        [1] = "sunny",
+        [2] = "cloudy",
+        [3] = "rain",
+        [4] = "fog",
+        [5] = "snow",
     }
 
     local weatherDescription = weatherTypes[weatherType] or "UNKNOWN"
     local multiplier = self.weatherMultipliers[weatherDescription] or 1
 
-    ShelterMatters.log(string.format("Weather: %s, applying multiplier: %.2f", weatherDescription, multiplier))
+    if debugPrint then
+        print(string.format("Weather: %s, applying multiplier: %.2f", weatherDescription, multiplier))
+    else
+        ShelterMatters.log(string.format("Weather: %s, applying multiplier: %.2f", weatherDescription, multiplier))
+    end
+
     return multiplier
+end
+
+function ShelterMatters:getVehicleDetailsString(vehicle)
+    local typeName = vehicle.typeName
+    local damageRate = self.damageRates[typeName] or self.damageRates.default
+
+    local inShed = ShelterMatters.isInShed(vehicle)
+
+    return ("Entity type: " .. (vehicle.typeName or "unknown") ..
+        "\nEntity name: " .. vehicle:getFullName() ..
+        "\ndmg: " .. tostring(vehicle:getDamageAmount()) ..
+        "\nactive: " .. tostring(vehicle.isActive) ..
+        "\noperating: " .. tostring(vehicle:getIsOperating()) ..
+        "\noperatingtime: " .. tostring(vehicle.operatingTime) ..
+        "\ndamageRate: " .. tostring(damageRate) ..
+        "\ninShed: " .. tostring(inShed))
 end
 
 function ShelterMatters:updateDamageAmount(vehicle, elapsedInGameHours, multiplier)
@@ -147,12 +189,7 @@ function ShelterMatters:updateDamageAmount(vehicle, elapsedInGameHours, multipli
         return
     end
 
-    ShelterMatters.log("Entity type: " .. (vehicle.typeName or "unknown"))
-    ShelterMatters.log("Entity name: " .. vehicle:getFullName())
-    ShelterMatters.log("dmg: " .. tostring(vehicle:getDamageAmount()))
-    ShelterMatters.log("active: " .. tostring(vehicle.isActive))
-    ShelterMatters.log("operating: " .. tostring(vehicle:getIsOperating()))
-    ShelterMatters.log("operatingtime: " .. tostring(vehicle.operatingTime))
+    ShelterMatters.log(self:getVehicleDetailsString(vehicle))
 
     -- should be not active or not operating
     if vehicle.isActive and vehicle:getIsOperating() then
@@ -291,7 +328,7 @@ end
 function ShelterMatters:getSavegameConfigPath()
     local savegameDir = g_currentMission.missionInfo.savegameDirectory
     if savegameDir then
-        return savegameDir .. "/shelterMattersConfig.xml"
+        return savegameDir .. "/shelterMatters.xml"
     else
         -- Fallback for unsaved games or missions without save directories
         return nil
@@ -307,24 +344,18 @@ function ShelterMatters:saveConfig()
 
     local xmlFile = createXMLFile("ShelterMattersConfig", configFile, "ShelterMatters")
 
-
-
-    --[[for typeName, rate in pairs(self.damageRates) do
-        setXMLFloat(xmlFile, string.format("ShelterMatters.damageRates.%s", typeName), rate)
-    end]]
-    
     local i = 0
     for typeName, rate in pairs(self.damageRates) do
-        local key = string.format("ShelterMatters.damageRates.type(%d)", i)
-        setXMLString(xmlFile, key .. "#typeName", typeName)
+        local key = string.format("ShelterMatters.damageRates.rate(%d)", i)
+        setXMLString(xmlFile, key .. "#type", typeName)
         setXMLFloat(xmlFile, key .. "#rate", rate)
         i = i + 1
     end
 
     i = 0 -- reset i counter
     for weatherType, multiplier in pairs(self.weatherMultipliers) do
-        local key = string.format("ShelterMatters.weatherMultipliers.type(%d)", i)
-        setXMLString(xmlFile, key .. "#typeName", weatherType)
+        local key = string.format("ShelterMatters.weatherMultipliers.multiplier(%d)", i)
+        setXMLString(xmlFile, key .. "#type", weatherType)
         setXMLFloat(xmlFile, key .. "#multiplier", multiplier)
         i = i + 1
     end
@@ -332,7 +363,7 @@ function ShelterMatters:saveConfig()
     saveXMLFile(xmlFile)
     delete(xmlFile)
 
-    ShelterMatters.log("Configuration saved to: " .. configFile)
+    Logging.info("[shelterMatters] Configuration saved to: " .. configFile)
 end
 
 function ShelterMatters:loadConfig()
@@ -343,7 +374,7 @@ function ShelterMatters:loadConfig()
     end
 
     if not fileExists(configFile) then
-        ShelterMatters.log("Configuration file not found. Using defaults.")
+        Logging.info("[shelterMatters] Configuration file not found. Using defaults.")
         self:saveConfig()
         return
     end
@@ -351,10 +382,10 @@ function ShelterMatters:loadConfig()
     local xmlFile = loadXMLFile("ShelterMattersConfig", configFile)
     local i = 0
     while true do
-        local key = string.format("ShelterMatters.damageRates.type(%d)", i)
-        local typeName = getXMLString(xmlFile, key .. "#typeName")
+        local key = string.format("ShelterMatters.damageRates.rate(%d)", i)
+        local typeName = getXMLString(xmlFile, key .. "#type")
         if typeName == nil then
-            break
+            break -- Exit when no more child nodes are found
         end
 
         local rate = getXMLFloat(xmlFile, key .. "#rate")
@@ -367,8 +398,8 @@ function ShelterMatters:loadConfig()
 
     i = 0 -- reset i counter
     while true do
-        local key = string.format("ShelterMatters.weatherMultipliers.type(%d)", i)
-        local weatherType = getXMLString(xmlFile, key .. "#typeName")
+        local key = string.format("ShelterMatters.weatherMultipliers.multiplier(%d)", i)
+        local weatherType = getXMLString(xmlFile, key .. "#type")
         if not weatherType then
             break
         end
@@ -382,18 +413,17 @@ function ShelterMatters:loadConfig()
     end
 
     delete(xmlFile)
-    ShelterMatters.log("Configuration loaded from: " .. configFile)
+    Logging.info("[shelterMatters] Configuration loaded from: " .. configFile)
 end
-
-
-
 
 --[[
     Console commands
 ]]
 
-function ShelterMatters:changeDamageRate(typeName, newRate)
+addConsoleCommand("smSetDamageRate", "Changes the damage rate for a specific vehicle type", "smSetDamageRate", ShelterMatters)
+function ShelterMatters:smSetDamageRate(typeName, newRate)
     if not g_currentMission:getIsServer() then
+        print("Changes can only be done on the server.")
         return
     end
 
@@ -406,16 +436,15 @@ function ShelterMatters:changeDamageRate(typeName, newRate)
 
     -- Update the rate
     self.damageRates[typeName] = newRate
-    print("Updated damage rate for type '%s' to %.1f", typeName, newRate)
-
-    -- Save the updated configuration
-    self:saveConfig()
+    print(string.format("Updated damage rate for type '%s' to %.1f", typeName, newRate))
 
     ShelterMattersSyncEvent.sendToClients()
 end
 
-function ShelterMatters:changeWeatherMultiplier(weatherType, newMultiplier)
+addConsoleCommand("smSetWeatherMultiplier", "Updates the wear multiplier associated with a specific weather type", "smSetWeatherMultiplier", ShelterMatters)
+function ShelterMatters:smSetWeatherMultiplier(weatherType, newMultiplier)
     if not g_currentMission:getIsServer() then
+        print("Changes can only be done on the server.")
         return
     end
 
@@ -428,15 +457,42 @@ function ShelterMatters:changeWeatherMultiplier(weatherType, newMultiplier)
 
     -- Update the rate
     self.weatherMultipliers[weatherType] = newMultiplier
-    print("Updated weather multiplier for type '%s' to %.2f", weatherType, newMultiplier)
-
-    -- Save the updated configuration
-    self:saveConfig()
+    print(string.format("Updated weather multiplier for type '%s' to %.2f", weatherType, newMultiplier))
 
     ShelterMattersSyncEvent.sendToClients()
 end
 
-function ShelterMatters:listDamageRates()
+addConsoleCommand("smVehicleDetails", "Displays detailed information about a the vehicle currently being used and attached implements", "smVehicleDetails", ShelterMatters)
+function ShelterMatters:smVehicleDetails()
+    
+    local vehicle = g_currentMission.controlledVehicle
+    if vehicle then
+        print(self:getVehicleDetailsString(vehicle))
+        local implements = vehicle:getAttachedImplements()
+
+        if implements and #implements > 0 then
+            print("Attached implements:")
+            for _, implement in ipairs(implements) do
+                local implementObject = implement.object
+                if implementObject then
+                    print(self:getVehicleDetailsString(implementObject))
+                end
+            end
+        else
+            print("No implements attached.")
+        end
+    else
+        print("Currently not in vehicle")
+    end
+end
+
+addConsoleCommand("smCurrentWeather", "Displays the current weather conditions and their associated multiplier", "smCurrentWeather", ShelterMatters)
+function ShelterMatters:smCurrentWeather()
+    self:weatherMultiplier(true)
+end
+
+addConsoleCommand("smListDamageRates", "Lists the current damage rates for all vehicle types", "smListDamageRates", ShelterMatters)
+function ShelterMatters:smListDamageRates()
     print("=== Current Damage Rates ===")
     for typeName, rate in pairs(self.damageRates) do
         print(string.format("Type: %s, Rate: %.2f", typeName, rate))
@@ -444,7 +500,8 @@ function ShelterMatters:listDamageRates()
     print("=== End of List ===")
 end
 
-function ShelterMatters:listWeatherMultipliers()
+addConsoleCommand("smListWeatherMultipliers", "Lists the current weather multipliers, showing how different weather conditions impact vehicle wear", "smListWeatherMultipliers", ShelterMatters)
+function ShelterMatters:smListWeatherMultipliers()
     print("=== Current Weather Multipliers ===")
     for weatherType, multiplier in pairs(self.weatherMultipliers) do
         print(string.format("Weather: %s, Multiplier: %.2f", weatherType, multiplier))
@@ -453,29 +510,33 @@ function ShelterMatters:listWeatherMultipliers()
 end
 
 function ShelterMatters:onChatCommand(command, arguments, playerId)
-    if not g_currentMission:getIsServer() then
-        return
-    end
+    print("[shelterMatters] onChatCommand")
 
-    if command == "sm_setDamageRate" then
+    if command == "smSetDamageRate" then
         local typeName, newRate = unpack(arguments)
         if g_currentMission.userManager:getUserByUserId(playerId).isAdmin then
-            self:changeDamageRate(typeName, newRate)
+            self:smSetDamageRate(typeName, newRate)
         else
             print("You do not have permission to execute this command.")
         end
-    elseif command == "sm_setWeatherMultiplier" then
+    elseif command == "smSetWeatherMultiplier" then
         local weatherType, newMultiplier = unpack(arguments)
         if g_currentMission.userManager:getUserByUserId(playerId).isAdmin then
-            self:changeWeatherMultiplier(weatherType, newMultiplier)
+            self:smSetWeatherMultiplier(weatherType, newMultiplier)
         else
             print("You do not have permission to execute this command.")
         end
-    elseif command == "sm_listDamageRates" then
-        self:listDamageRates()
+    elseif command == "smListDamageRates" then
+        self:smListDamageRates()
         return true
-    elseif command == "sm_listWeatherMultipliers" then
-        self:listWeatherMultipliers()
+    elseif command == "smListWeatherMultipliers" then
+        self:smListWeatherMultipliers()
+        return true
+    elseif command == "smVehicleDetails" then
+        self:smVehicleDetails()
+        return true
+    elseif command == "smCurrentWeather" then
+        self:smCurrentWeather()
         return true
     end
 end

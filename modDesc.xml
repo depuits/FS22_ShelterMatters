@@ -13,5 +13,6 @@
 
     <extraSourceFiles>
         <sourcefile filename="src/shelterMatters.lua"/>
+        <sourcefile filename="src/shelterMattersSyncEvent.lua"/>
     </extraSourceFiles>
 </modDesc>
