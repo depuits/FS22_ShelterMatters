@@ -464,27 +464,35 @@ end
 
 addConsoleCommand("smVehicleDetails", "Displays detailed information about a the vehicle currently being used and attached implements", "smVehicleDetails", ShelterMatters)
 function ShelterMatters:smVehicleDetails()
-    
     local vehicle = g_currentMission.controlledVehicle
     if vehicle then
-        print(self:getVehicleDetailsString(vehicle))
-        local implements = vehicle:getAttachedImplements()
-
-        if implements and #implements > 0 then
-            print("Attached implements:")
-            for _, implement in ipairs(implements) do
-                local implementObject = implement.object
-                if implementObject then
-                    print(self:getVehicleDetailsString(implementObject))
-                end
-            end
-        else
-            print("No implements attached.")
-        end
+        print(self:getVehicleDetailsStringRecursive(vehicle, ""))
     else
         print("Currently not in vehicle")
     end
 end
+
+function ShelterMatters:getVehicleDetailsStringRecursive(vehicle, indent, prev)
+    prev = prev or ""
+    if vehicle then
+        prev = prev .. indent .. " " .. self:getVehicleDetailsString(vehicle):gsub("\n", "\n" .. indent .. " ")
+        local implements = vehicle:getAttachedImplements()
+        if implements and #implements > 0 then
+            prev = prev .. "\n" .. indent .. " Attached implements:\n"
+            for _, implement in ipairs(implements) do
+                local implementObject = implement.object
+                if implementObject then
+                    prev = self:getVehicleDetailsStringRecursive(implementObject, indent .. "-", prev)
+                end
+            end
+        else
+            prev = prev .. "\n" .. indent .. " No implements attached.\n"
+        end
+    end
+
+    return prev
+end
+
 
 addConsoleCommand("smCurrentWeather", "Displays the current weather conditions and their associated multiplier", "smCurrentWeather", ShelterMatters)
 function ShelterMatters:smCurrentWeather()
@@ -508,39 +516,6 @@ function ShelterMatters:smListWeatherMultipliers()
     end
     print("=== End of List ===")
 end
-
-function ShelterMatters:onChatCommand(command, arguments, playerId)
-    print("[shelterMatters] onChatCommand")
-
-    if command == "smSetDamageRate" then
-        local typeName, newRate = unpack(arguments)
-        if g_currentMission.userManager:getUserByUserId(playerId).isAdmin then
-            self:smSetDamageRate(typeName, newRate)
-        else
-            print("You do not have permission to execute this command.")
-        end
-    elseif command == "smSetWeatherMultiplier" then
-        local weatherType, newMultiplier = unpack(arguments)
-        if g_currentMission.userManager:getUserByUserId(playerId).isAdmin then
-            self:smSetWeatherMultiplier(weatherType, newMultiplier)
-        else
-            print("You do not have permission to execute this command.")
-        end
-    elseif command == "smListDamageRates" then
-        self:smListDamageRates()
-        return true
-    elseif command == "smListWeatherMultipliers" then
-        self:smListWeatherMultipliers()
-        return true
-    elseif command == "smVehicleDetails" then
-        self:smVehicleDetails()
-        return true
-    elseif command == "smCurrentWeather" then
-        self:smCurrentWeather()
-        return true
-    end
-end
-
 
 function ShelterMatters:onPlayerJoined()
     if g_server then

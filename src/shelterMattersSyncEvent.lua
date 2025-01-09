@@ -1,5 +1,7 @@
 ShelterMattersSyncEvent = {}
 local ShelterMattersSyncEvent_mt = Class(ShelterMattersSyncEvent, Event)
+InitEventClass(ShelterMattersSyncEvent, "ShelterMattersSyncEvent")
+
 
 function ShelterMattersSyncEvent.emptyNew()
     return Event.new(ShelterMattersSyncEvent_mt)
@@ -28,6 +30,8 @@ function ShelterMattersSyncEvent:readStream(streamId, connection)
         local multiplier = streamReadFloat32(streamId)
         self.weatherMultipliers[weatherType] = multiplier
     end
+    
+    self:run(connection)
 end
 
 function ShelterMattersSyncEvent:writeStream(streamId, connection)
@@ -54,6 +58,3 @@ end
 function ShelterMattersSyncEvent.sendToClients()
     g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.damageRates, ShelterMatters.weatherMultipliers))
 end
-
--- Make the event available on both client and server
-InitEventClass(ShelterMattersSyncEvent, "ShelterMattersSyncEvent")
