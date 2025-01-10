@@ -15,6 +15,10 @@ function ShelterMattersSyncEvent.new(damageRates, weatherMultipliers)
 end
 
 function ShelterMattersSyncEvent:readStream(streamId, connection)
+    if g_server ~= nil then
+        return
+    end
+
     self.damageRates = {}
     local count = streamReadInt32(streamId)
     for i = 1, count do
@@ -35,13 +39,29 @@ function ShelterMattersSyncEvent:readStream(streamId, connection)
 end
 
 function ShelterMattersSyncEvent:writeStream(streamId, connection)
-    streamWriteInt32(streamId, table.getn(self.damageRates))
+    if self.damageRates == nil or self.weatherMultipliers == nil then
+        return
+    end
+
+    -- Write damageRates
+    local damageRatesCount = 0
+    for _ in pairs(self.damageRates) do
+        damageRatesCount = damageRatesCount + 1
+    end
+    streamWriteInt32(streamId, damageRatesCount)
+
     for typeName, rate in pairs(self.damageRates) do
         streamWriteString(streamId, typeName)
         streamWriteFloat32(streamId, rate)
     end
 
-    streamWriteInt32(streamId, table.getn(self.weatherMultipliers))
+    -- Write weatherMultipliers
+    local weatherMultipliersCount = 0
+    for _ in pairs(self.weatherMultipliers) do
+        weatherMultipliersCount = weatherMultipliersCount + 1
+    end
+    streamWriteInt32(streamId, weatherMultipliersCount)
+
     for weatherType, multiplier in pairs(self.weatherMultipliers) do
         streamWriteString(streamId, weatherType)
         streamWriteFloat32(streamId, multiplier)
@@ -49,12 +69,19 @@ function ShelterMattersSyncEvent:writeStream(streamId, connection)
 end
 
 function ShelterMattersSyncEvent:run(connection)
-    if not connection:getIsServer() then
-        ShelterMatters.damageRates = self.damageRates
-        ShelterMatters.weatherMultipliers = self.weatherMultipliers
+    if g_server ~= nil then
+        ShelterMattersSyncEvent.sendToClients()
+        return
     end
+
+    ShelterMatters.damageRates = self.damageRates
+    ShelterMatters.weatherMultipliers = self.weatherMultipliers
 end
 
 function ShelterMattersSyncEvent.sendToClients()
     g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.damageRates, ShelterMatters.weatherMultipliers))
+end
+
+function ShelterMattersSyncEvent.sendToServer()
+    g_client:getServerConnection():sendEvent(ShelterMattersSyncEvent.new())
 end

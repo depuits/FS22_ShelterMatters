@@ -60,6 +60,8 @@ function ShelterMatters:loadMap(name)
         FSCareerMissionInfo.saveToXMLFile = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile, ShelterMatters.save)
    
         self:loadConfig()
+    else
+        ShelterMattersSyncEvent.sendToServer()
     end
 end
 
@@ -515,10 +517,4 @@ function ShelterMatters:smListWeatherMultipliers()
         print(string.format("Weather: %s, Multiplier: %.2f", weatherType, multiplier))
     end
     print("=== End of List ===")
-end
-
-function ShelterMatters:onPlayerJoined()
-    if g_server then
-        g_server:broadcastEvent(ShelterMattersSyncEvent.new(self.damageRates, self.weatherMultipliers), true, nil, g_server.clientConnections)
-    end
 end
