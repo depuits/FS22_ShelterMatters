@@ -1,12 +1,43 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 
-<modDesc descVersion="66">
-    <title>Shelter matters</title>
+<modDesc descVersion="75">
+    <title>
+        <en>Shelter Matters</en>
+    </title>
     <description>
-        Applies passive damage to vehicles and tools when left outside.
+        <en>
+<![CDATA[
+ShelterMatters is a mod for Farming Simulator 22 that enhances the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear based on their location.
+
+# Features
+
+- Damage Accumulation: Vehicles and tools left outside will accumulate damage over time, even if they're not in use.
+- Dynamic Indoor Detection: Automatically detects indoor areas for all placeables on the map.
+- Weather Impact: Weather conditions influence the damage rate of vehicles. More wear occurs during rain, snow, and fog.
+- Configurable Rates: Server admins can configure damage rates and weather multipliers through commands or configuration files.
+- Savegame Integration: Configuration is saved per savegame, allowing different damage rates across various saves.
+
+https://github.com/depuits/FS22_ShelterMatters
+]]>
+        </en>
+        <de>
+<![CDATA[
+ShelterMatters ist ein Mod, der die Bedeutung von Schuppen und Innenlagern erhöht, indem er Mechaniken für die Abnutzung von Fahrzeugen und Werkzeugen basierend auf ihrem Standort einführt.
+
+Eigenschaften:
+
+- Schadensakkumulation: Fahrzeuge und Werkzeuge, die draußen stehen, sammeln mit der Zeit Schaden an, auch wenn sie nicht in Gebrauch sind.
+- Dynamische Innenraum-Erkennung: Automatische Erkennung von Innenräumen für alle platzierbaren Objekte auf der Karte.
+- Wettereinfluss: Die Wetterbedingungen beeinflussen die Schadensrate von Fahrzeugen. Bei Regen, Schnee und Nebel tritt mehr Verschleiß auf.
+- Konfigurierbare Raten: Server-Administratoren können Schadensraten und Wettermultiplikatoren über Befehle oder Konfigurationsdateien konfigurieren.
+- Savegame-Integration: Die Konfiguration wird pro Savegame gespeichert, so dass unterschiedliche Schadensraten in verschiedenen Spielständen möglich sind.
+
+https://github.com/depuits/FS22_ShelterMatters
+]]>
+        </de>
     </description>
     <author>Depuits</author>
-    <version>dev</version>
+    <version>1.0.0.0</version>
 
     <iconFilename>mod_logo.dds</iconFilename>
     <multiplayer supported="true"/>
