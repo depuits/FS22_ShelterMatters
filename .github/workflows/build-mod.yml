@@ -27,7 +27,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/heads/main ]]; then
             # Development build version
             VERSION="dev-$(date +'%Y%m%d-%H%M')"
-          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             # Tagged release version
             VERSION="${GITHUB_REF#refs/tags/}"
           else
@@ -41,7 +41,7 @@ jobs:
       # Step 3: Update global isDevBuild
       - name: Configure Dev or Release Mode
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             sed -i 's/ShelterMatters.isDevBuild = true/ShelterMatters.isDevBuild = false/' src/shelterMatters.lua
           fi
           
