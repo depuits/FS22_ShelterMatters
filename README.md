@@ -222,11 +222,11 @@ The ShelterMatters mod is compatible with multiplayer. The configuration and dam
 ## Troubleshooting
 
 ### Common Issues
-- **Q: Vehicles are not recognized as "inside."**
+**Q: Vehicles are not recognized as "inside."**
 - Ensure the shed or placeable has a properly defined indoor area.
 - Move the vehicle slightly to ensure it is within the boundaries.
 
-- **Q: I’m not seeing any changes in wear or damage.**
+**Q: I’m not seeing any changes in wear or damage.**
 - Verify that the mod is enabled in your save game.
 - Check the logs for errors (`log.txt` in the game directory).
 
