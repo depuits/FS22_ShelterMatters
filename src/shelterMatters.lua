@@ -56,13 +56,17 @@ function ShelterMatters:loadMap(name)
     ShelterMatters.insideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/insideIcon.dds")
     ShelterMatters.outsideIcon = createImageOverlay(ShelterMatters.modDirectory .. "src/outsideIcon.dds")
 
+    FSBaseMission.onConnectionFinishedLoading = Utils.appendedFunction(FSBaseMission.onConnectionFinishedLoading, ShelterMatters.loadSettingsFromServer)
+
     if g_currentMission:getIsServer() then
         FSCareerMissionInfo.saveToXMLFile = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile, ShelterMatters.save)
    
         self:loadConfig()
-    else
-        ShelterMattersSyncEvent.sendToServer()
     end
+end
+
+function ShelterMatters.loadSettingsFromServer()
+    ShelterMattersSyncEvent.sendToServer()
 end
 
 function ShelterMatters.save()
