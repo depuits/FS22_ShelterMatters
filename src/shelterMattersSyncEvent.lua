@@ -7,8 +7,9 @@ function ShelterMattersSyncEvent.emptyNew()
     return Event.new(ShelterMattersSyncEvent_mt)
 end
 
-function ShelterMattersSyncEvent.new(damageRates, weatherMultipliers)
+function ShelterMattersSyncEvent.new(hideShelterStatusIcon, damageRates, weatherMultipliers)
     local self = ShelterMattersSyncEvent.emptyNew()
+    self.hideShelterStatusIcon = hideShelterStatusIcon
     self.damageRates = damageRates
     self.weatherMultipliers = weatherMultipliers
     return self
@@ -18,6 +19,8 @@ function ShelterMattersSyncEvent:readStream(streamId, connection)
     if g_server ~= nil then
         return
     end
+
+    self.hideShelterStatusIcon = streamReadBool(streamId)
 
     self.damageRates = {}
     local count = streamReadInt32(streamId)
@@ -42,6 +45,9 @@ function ShelterMattersSyncEvent:writeStream(streamId, connection)
     if self.damageRates == nil or self.weatherMultipliers == nil then
         return
     end
+
+    -- write status icon state
+    streamWriteBool(streamId, self.hideShelterStatusIcon)
 
     -- Write damageRates
     local damageRatesCount = 0
@@ -74,12 +80,13 @@ function ShelterMattersSyncEvent:run(connection)
         return
     end
 
+    ShelterMatters.hideShelterStatusIcon = self.hideShelterStatusIcon
     ShelterMatters.damageRates = self.damageRates
     ShelterMatters.weatherMultipliers = self.weatherMultipliers
 end
 
 function ShelterMattersSyncEvent.sendToClients()
-    g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.damageRates, ShelterMatters.weatherMultipliers))
+    g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.hideShelterStatusIcon, ShelterMatters.damageRates, ShelterMatters.weatherMultipliers))
 end
 
 function ShelterMattersSyncEvent.sendToServer()

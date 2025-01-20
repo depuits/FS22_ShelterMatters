@@ -7,6 +7,8 @@ ShelterMatters.lastUpdateInGameTime = nil -- Global variable to track the last u
 
 ShelterMatters.isDevBuild = true -- Default is true; overridden by the build process if not in dev mode.
 
+ShelterMatters.hideShelterStatusIcon = false
+
 -- default values for weather multipliers
 ShelterMatters.weatherMultipliers = {
     sunny  = 1.0, -- normal wear. vehicles experience no additional wear in sunny conditions.
@@ -75,10 +77,9 @@ function ShelterMatters.save()
     end
 end
 
-
 function ShelterMatters:draw()
     local vehicle = g_currentMission.controlledVehicle
-    if vehicle then
+    if vehicle and not self.hideShelterStatusIcon then
 
         local uiScale = g_gameSettings:getValue("uiScale")
 
@@ -112,7 +113,11 @@ function ShelterMatters:update(dt)
     if not g_currentMission:getIsServer() then
         return -- Skip on clients
     end
-    
+
+    for _, object in pairs(g_currentMission.itemsToSave) do
+        DebugUtil.printTableRecursively(object, "item: ", 0, 1)
+    end
+
     -- Get the current in-game time in hours
     local currentInGameTime = g_currentMission.environment.dayTime / (60 * 60 * 1000) -- ms to hours
 
@@ -167,8 +172,6 @@ function ShelterMatters:weatherMultiplier(debugPrint)
 
     if debugPrint then
         print(string.format("Weather: %s, applying multiplier: %.2f", weatherDescription, multiplier))
-    else
-        ShelterMatters.log(string.format("Weather: %s, applying multiplier: %.2f", weatherDescription, multiplier))
     end
 
     return multiplier
@@ -195,11 +198,8 @@ function ShelterMatters:updateDamageAmount(vehicle, elapsedInGameHours, multipli
         return
     end
 
-    ShelterMatters.log(self:getVehicleDetailsString(vehicle))
-
     -- should be not active or not operating
     if vehicle.isActive and vehicle:getIsOperating() then
-        ShelterMatters.log("in use, using default calculations")
         return
     end
 
@@ -208,11 +208,8 @@ function ShelterMatters:updateDamageAmount(vehicle, elapsedInGameHours, multipli
     if not inShed then
         local baseOutsideDamage = self:getDamageRate(vehicle) -- damage percentage per ingame hour
         local outsideDamage = (baseOutsideDamage * multiplier * elapsedInGameHours)
-        ShelterMatters.log("NOT in shed: " .. tostring(outsideDamage))
 
         vehicle:addDamageAmount(outsideDamage)
-    else
-        ShelterMatters.log("in shed ")
     end
 end
 
@@ -237,7 +234,6 @@ end
 -- Function to check if a vehicle is inside any indoor area of a placeable
 function ShelterMatters.isVehicleInsideIndoorArea(vehicle, placeable)
     if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
-        --Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. " has no indoor areas")
         return false
     end
 
@@ -247,7 +243,6 @@ function ShelterMatters.isVehicleInsideIndoorArea(vehicle, placeable)
     -- Check all indoor areas
     for _, indoorArea in ipairs(placeable.spec_indoorAreas.areas) do
         if ShelterMatters.isPointInsideIndoorArea(vx, vy, vz, indoorArea, placeable) then
-            --Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. Vehicle is inside.")
             return true
         end
     end
@@ -305,7 +300,7 @@ function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
 --[[    local distance = calculateDistance(x, y, z, startX, startY, startZ)
 
     if distance < 50 then
-        Logging.info("[shelterMatters] placeable: " .. (placeable.typeName or "unknown") .. string.format(" Distance to Start Node: %.2f", distance))
+        ShelterMatters.log("placeable: " .. (placeable.typeName or "unknown") .. string.format(" Distance to Start Node: %.2f", distance))
 
         ShelterMatters.log(string.format(" placeable rot: x %.2f, y %.2f, z %.2f", rotX, rotY, rotZ))
         ShelterMatters.log(string.format(" start Node: x %.2f, y %.2f, z %.2f", startX, startY, startZ))
@@ -350,6 +345,8 @@ function ShelterMatters:saveConfig()
 
     local xmlFile = createXMLFile("ShelterMattersConfig", configFile, "ShelterMatters")
 
+    setXMLBool(xmlFile, "ShelterMatters.hideShelterStatusIcon", self.hideShelterStatusIcon)
+
     local i = 0
     for typeName, rate in pairs(self.damageRates) do
         local key = string.format("ShelterMatters.damageRates.rate(%d)", i)
@@ -369,7 +366,7 @@ function ShelterMatters:saveConfig()
     saveXMLFile(xmlFile)
     delete(xmlFile)
 
-    Logging.info("[shelterMatters] Configuration saved to: " .. configFile)
+    ShelterMatters.log("Configuration saved to: " .. configFile)
 end
 
 function ShelterMatters:loadConfig()
@@ -380,12 +377,15 @@ function ShelterMatters:loadConfig()
     end
 
     if not fileExists(configFile) then
-        Logging.info("[shelterMatters] Configuration file not found. Using defaults.")
+        ShelterMatters.log("Configuration file not found. Using defaults.")
         self:saveConfig()
         return
     end
 
     local xmlFile = loadXMLFile("ShelterMattersConfig", configFile)
+
+    self.hideShelterStatusIcon = Utils.getNoNil(getXMLBool(xmlFile, "ShelterMatters.hideShelterStatusIcon"), false)
+
     local i = 0
     while true do
         local key = string.format("ShelterMatters.damageRates.rate(%d)", i)
@@ -419,7 +419,7 @@ function ShelterMatters:loadConfig()
     end
 
     delete(xmlFile)
-    Logging.info("[shelterMatters] Configuration loaded from: " .. configFile)
+    ShelterMatters.log("Configuration loaded from: " .. configFile)
 end
 
 --[[
@@ -521,4 +521,15 @@ function ShelterMatters:smListWeatherMultipliers()
         print(string.format("Weather: %s, Multiplier: %.2f", weatherType, multiplier))
     end
     print("=== End of List ===")
+end
+
+addConsoleCommand("smToggleShelterStatusIcon", "Toggles the shelter status icon visibility", "smToggleShelterStatusIcon", ShelterMatters)
+function ShelterMatters:smToggleShelterStatusIcon()
+    if not g_currentMission:getIsServer() then
+        print("Changes can only be done on the server.")
+        return
+    end
+
+    self.hideShelterStatusIcon = not self.hideShelterStatusIcon
+    ShelterMattersSyncEvent.sendToClients()
 end
