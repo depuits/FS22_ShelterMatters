@@ -1,7 +1,13 @@
 
 ![ShelterMatters](logo.png)
 
-**ShelterMatters** is a mod for Farming Simulator 22 that enhances the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear based on their location.
+**ShelterMatters** is a mod for Farming Simulator 22 that enhances the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear based on their exposure to the elements.
+
+In the base game, vehicle damage only occurs when equipment is in use. ShelterMatters changes this by introducing passive wear over time when vehicles are left outside. Each vehicle type has a specific damage rate, with a baseline of 10% per year. More sensitive machinery like harvesters experiences higher wear at 15% per year, while trailers are more resilient experiencing just 5% per year, ensuring a diverse and dynamic impact on farm operations. (These rates are if the vehicle would stay outside for a full year without any use, and clear weather).
+
+Weather conditions also play a crucial role in the wear process. Vehicles exposed to rain can experience up to 5x increased wear, while snow results in 2x increased wear, and even fog has a moderate impact with a 1.5x multiplier. Storing equipment indoors mitigates these effects, making sheds an essential part of farm management.
+
+With ShelterMatters, sheds and storage buildings become a necessary investment, offering real benefits by protecting your valuable equipment from accelerated wear and reducing maintenance costs over time. This mod adds a strategic layer to the game, making strategic storage planning an important aspect of efficient farm management.
 
 ---
 
@@ -17,9 +23,18 @@
 
 ## Installation
 
-1. Download the `ShelterMatters.zip` file.
+1. Download the `FS22_ShelterMatters.zip` file.
 2. Place the file in your Farming Simulator 22 mods folder, typically located at: `Documents/My Games/FarmingSimulator2022/mods`.
 3. Launch the game and enable the mod in the "Installed Mods" section.
+
+### Uninstalling
+
+If you decide that the ShelterMatters mod does not fit your playstyle, you can easily remove it without affecting your savegame. Follow these simple steps to uninstall the mod safely:
+
+1. Disable the mod in your savegame from the "Installed Mods" section in the main menu.
+2. (Optional) Delete the FS22_ShelterMatters.zip file from your mods folder, typically located at: `Documents/My Games/FarmingSimulator2022/mods`.
+
+That's it! Your savegame will continue to work as normal without the mod.
 
 ---
 
