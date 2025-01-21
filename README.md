@@ -67,6 +67,8 @@ Below is an example of the shelter indication for a vehicle inside and outside a
 **Outside a Shelter**  
 ![Outside Shelter Example](indicationOutside.jpg)
 
+This icon can be disabled using the [`smToggleShelterStatusIcon` command](#7-Toggle-icon-status) or by editing the save file.
+
 #### Additional Notes
 
 - The shelter status updates dynamically as the vehicle or tool moves in or out of a shelter.
@@ -210,6 +212,12 @@ damageRate: 5
 - **Command**: `smCurrentWeather`
 - **Description**: Displays the current weather conditions and their associated multiplier.
 - **Example Output**: `Weather: rain, applying multiplier: 5.00`
+
+---
+
+### 7. Toggle icon status
+- **Command**: `smToggleShelterStatusIcon`
+- **Description**: Toggle the visibility of the shelter status icon. This is saved in the savegame and for all users.
 
 
 ## Mod Behavior:
