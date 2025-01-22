@@ -114,10 +114,6 @@ function ShelterMatters:update(dt)
         return -- Skip on clients
     end
 
-    for _, object in pairs(g_currentMission.itemsToSave) do
-        DebugUtil.printTableRecursively(object, "item: ", 0, 1)
-    end
-
     -- Get the current in-game time in hours
     local currentInGameTime = g_currentMission.environment.dayTime / (60 * 60 * 1000) -- ms to hours
 
