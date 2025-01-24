@@ -1,11 +1,13 @@
 
 ![ShelterMatters](logo.png)
 
-**ShelterMatters** is a mod for Farming Simulator 22 that enhances the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear based on their exposure to the elements.
+**ShelterMatters** is a mod for Farming Simulator 22 that adds a realistic emphasis on the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear, as well as bale deterioration, based on their exposure to the elements for a more immersive farming experience.
 
 In the base game, vehicle damage only occurs when equipment is in use. ShelterMatters changes this by introducing passive wear over time when vehicles are left outside. Each vehicle type has a specific damage rate, with a baseline of 10% per year. More sensitive machinery like harvesters experiences higher wear at 15% per year, while trailers are more resilient experiencing just 5% per year, ensuring a diverse and dynamic impact on farm operations. (These rates are if the vehicle would stay outside for a full year without any use, and clear weather).
 
 Weather conditions also play a crucial role in the wear process. Vehicles exposed to rain can experience up to 5x increased wear, while snow results in 2x increased wear, and even fog has a moderate impact with a 1.5x multiplier. Storing equipment indoors mitigates these effects, making sheds an essential part of farm management.
+
+Gone are the days of leaving your bales in the field without consequence! In addition to vehicles and tools, bales are now affected by exposure to the weather. Bales stored outdoors will deteriorate over time based on the current weather conditions, leading to potential loss of valuable feed and materials. Storing bales in sheds or covered areas prevents decay entirely, encouraging you to invest in proper storage solutions to avoid financial losses.
 
 With ShelterMatters, sheds and storage buildings become a necessary investment, offering real benefits by protecting your valuable equipment from accelerated wear and reducing maintenance costs over time. This mod adds a strategic layer to the game, making strategic storage planning an important aspect of efficient farm management.
 
@@ -14,6 +16,7 @@ With ShelterMatters, sheds and storage buildings become a necessary investment, 
 ## Features
 
 - **Damage Accumulation**: Vehicles and tools left outside will accumulate damage over time, even if they're not in use.
+- **Bale Decay Mechanics**: Bales deteriorate over time when exposed to adverse weather conditions, encouraging proper storage practices. ([can be disabled](#disabling-bale-decay))
 - **Dynamic Indoor Detection**: Automatically detects indoor areas for all placeables on the map.
 - **Weather Impact**: Weather conditions influence the damage rate of vehicles. More wear occurs during rain, snow, and fog.
 - **Configurable Rates**: Server admins can configure damage rates and weather multipliers through commands or configuration files.
@@ -67,7 +70,7 @@ Below is an example of the shelter indication for a vehicle inside and outside a
 **Outside a Shelter**  
 ![Outside Shelter Example](indicationOutside.jpg)
 
-This icon can be disabled using the [`smToggleShelterStatusIcon` command](#7-Toggle-icon-status) or by editing the save file.
+This icon can be disabled using the [`smToggleShelterStatusIcon` command](#toggle-icon-status) or by editing the save file.
 
 #### Additional Notes
 
@@ -82,14 +85,17 @@ This feature simplifies equipment management by providing real-time feedback, en
 
 The mod comes with a default configuration that can be customized. The damage rates and weather multipliers are configurable through a file in your savegame or by using in game commands.
 
+- **Hide Shelter Status Icon**: Determines wheiter the Vehicle Shelter Indication is displayed.
 - **Damage Rates**: Controls how much damage is applied to each vehicle type. (This value is a percentage of damage per in-game year)
 - **Weather Multipliers**: Controls how the weather affects vehicle damage over time.
+- **Bale Weather Decay**: Controls how much the weather affects bale over time. (This value is liters lost per in-game hour)
 
 Example:
 
 ```xml
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <ShelterMatters>
+    <hideShelterStatusIcon>false</hideShelterStatusIcon>
     <damageRates>
         <rate type="seeder" rate="12.000000"/>
         <rate type="manureSpreader" rate="15.000000"/>
@@ -120,14 +126,24 @@ Example:
         <multiplier type="cloudy" multiplier="1.000000"/>
         <multiplier type="sunny" multiplier="1.000000"/>
     </weatherMultipliers>
+    <baleWeatherDecay>
+        <rate type="rain" rate="3000"/>
+        <rate type="snow" rate="2000"/>
+        <rate type="fog" rate="1000"/>
+        <rate type="default" rate="0"/>
+    </baleWeatherDecay>
 </ShelterMatters>
 ```
+
+### Disabling Bale Decay
+
+You can diable the decay of bales by setting all the `baleWeatherDecay` rates to `0`. This will also completly skip the indoors check for bales.
 
 ## Commands
 
 The following commands can be used by server admins to configure damage rates and weather multipliers, as well as to debug vehicle and weather-related details. These commands must be entered through the developer console, which can be accessed by enabling the console in the game's settings.
 
-### 1. Set Damage Rate
+### Set Damage Rate
 
 - **Command**: `smSetDamageRate <typeName> <newRate>`
 - **Description**: Changes the damage rate for a specific vehicle type. Adjust how much damage a particular vehicle type accumulates over time.
@@ -140,19 +156,32 @@ The following commands can be used by server admins to configure damage rates an
 
 ---
 
-### 2. Set Weather Multiplier
+### Set Weather Multiplier
 - **Command**: `smSetWeatherMultiplier <weatherType> <newMultiplier>`
 - **Description**: Updates the wear multiplier for a specific weather condition. Adjust how different weather conditions affect vehicle damage rates.
 - **Arguments**:
-- `<weatherType>`: The weather condition (e.g., `sunny`, `rain`, `snow`).
-- `<newMultiplier>`: The new multiplier as a decimal (e.g., `2.0` for double wear during this weather).
+    - `<weatherType>`: The weather condition (e.g., `sunny`, `rain`, `snow`).
+    - `<newMultiplier>`: The new multiplier as a decimal (e.g., `2.0` for double wear during this weather).
 - **Example**:
     - `smSetWeatherMultiplier rain 4.0`
     - This increases wear during rain to four times the normal rate.
 
 ---
 
-### 3. List Damage Rates
+### Set Bale Decay Rate
+
+- **Command**: `smSetBaleWeatherDecay <weatherType> <newRate>`
+- **Description**: Adjusts the rate at which bales deteriorate based on weather conditions.
+- **Arguments**:
+    - `<weatherType>`: The weather condition (e.g., `sunny`, `rain`, `snow`).
+    - `<newRate>`: The new decay rate in liters per in-game hour.
+- **Example**:
+    - `smSetBaleWeatherDecay rain 3000`
+    - This sets the bale decay rate to 3000 liters per hour during rain.
+
+---
+
+### List Damage Rates
 - **Command**: `smListDamageRates`
 - **Description**: Lists the current damage rates for all vehicle types.
 - **Example Output**:
@@ -168,7 +197,7 @@ Type: tractor, Rate: 10.00
 
 ---
 
-### 4. List Weather Multipliers
+### List Weather Multipliers
 - **Command**: `smListWeatherMultipliers`
 - **Description**: Lists the current weather multipliers, showing how different weather conditions impact vehicle wear.
 - **Example Output**:
@@ -184,7 +213,22 @@ Weather: rain, Multiplier: 5.00
 
 ---
 
-### 5. Vehicle Details
+### List Bale Decay Rates
+- **Command**: smListBaleWeatherDecay
+- **Description**: Lists the current bale deterioration rates for each weather type.
+- **Example Output**:
+```
+=== Current Bale Decay by Weather ===
+Weather: default, Decay Rate: 0 L/h
+Weather: fog, Decay Rate: 1500 L/h
+Weather: snow, Decay Rate: 2000 L/h
+Weather: rain, Decay Rate: 3000 L/h
+=== End of List ===
+```
+
+---
+
+### Vehicle Details
 - **Command**: `smVehicleDetails`
 - **Description**: Displays detailed information about the vehicle currently being used.
 - **Example Output**:
@@ -208,14 +252,14 @@ damageRate: 5
 
 ---
 
-### 6. Current Weather
+### Current Weather
 - **Command**: `smCurrentWeather`
 - **Description**: Displays the current weather conditions and their associated multiplier.
 - **Example Output**: `Weather: rain, applying multiplier: 5.00`
 
 ---
 
-### 7. Toggle icon status
+### Toggle icon status
 - **Command**: `smToggleShelterStatusIcon`
 - **Description**: Toggle the visibility of the shelter status icon. This is saved in the savegame and for all users.
 

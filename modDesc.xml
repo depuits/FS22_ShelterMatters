@@ -6,17 +6,20 @@
     </title>
     <description>
         <en><![CDATA[
-ShelterMatters is a mod for Farming Simulator 22 that enhances the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear based on their exposure to the elements.
+ShelterMatters is a mod for Farming Simulator 22 that adds a realistic emphasis on the importance of sheds and indoor storage by introducing mechanics for vehicle and tool wear and tear, as well as bale deterioration, based on their exposure to the elements for a more immersive farming experience.
 
 In the base game, vehicle damage only occurs when equipment is in use. ShelterMatters changes this by introducing passive wear over time when vehicles are left outside. Each vehicle type has a specific damage rate, with a baseline of 10% per year. More sensitive machinery like harvesters experiences higher wear at 15% per year, while trailers are more resilient experiencing just 5% per year, ensuring a diverse and dynamic impact on farm operations. (These rates are if the vehicle would stay outside for a full year without any use, and clear weather).
 
 Weather conditions also play a crucial role in the wear process. Vehicles exposed to rain can experience up to 5x increased wear, while snow results in 2x increased wear, and even fog has a moderate impact with a 1.5x multiplier. Storing equipment indoors mitigates these effects, making sheds an essential part of farm management.
+
+Gone are the days of leaving your bales in the field without consequence! In addition to vehicles and tools, bales are now affected by exposure to the weather. Bales stored outdoors will deteriorate over time based on the current weather conditions, leading to potential loss of valuable feed and materials. Storing bales in sheds or covered areas prevents decay entirely, encouraging you to invest in proper storage solutions to avoid financial losses.
 
 With ShelterMatters, sheds and storage buildings become a necessary investment, offering real benefits by protecting your valuable equipment from accelerated wear and reducing maintenance costs over time. This mod adds a strategic layer to the game, making strategic storage planning an important aspect of efficient farm management.
 
 # Features
 
 - Damage Accumulation: Vehicles and tools left outside will accumulate damage over time, even if they're not in use.
+- Bale Decay Mechanics: Bales deteriorate over time when exposed to adverse weather conditions, encouraging proper storage practices.
 - Dynamic Indoor Detection: Automatically detects indoor areas for all placeables on the map.
 - Weather Impact: Weather conditions influence the damage rate of vehicles. More wear occurs during rain, snow, and fog.
 - Configurable Rates: Server admins can configure damage rates and weather multipliers through commands or configuration files.
@@ -25,17 +28,20 @@ With ShelterMatters, sheds and storage buildings become a necessary investment, 
 https://github.com/depuits/FS22_ShelterMatters/releases/
         ]]></en>
         <de><![CDATA[
-ShelterMatters ist ein Mod für den Landwirtschafts-Simulator 22, der die Bedeutung von Schuppen und Innenlagern erhöht, indem er eine Mechanik für die Abnutzung von Fahrzeugen und Werkzeugen einführt, die auf deren Exposition gegenüber den Elementen basiert.
+ShelterMatters ist ein Mod für den Landwirtschafts-Simulator 22, der die Bedeutung von Schuppen und Innenräumen realistisch unterstreicht, indem er Mechanismen für die Abnutzung von Fahrzeugen und Werkzeugen sowie für den Verfall von Ballen einführt, die auf der Exposition gegenüber den Elementen basieren, um ein realistischeres Farmerlebnis zu ermöglichen.
 
-Im Basisspiel treten Fahrzeugschäden nur dann auf, wenn die Ausrüstung in Gebrauch ist. ShelterMatters ändert dies durch die Einführung von passivem Verschleiß im Laufe der Zeit, wenn die Fahrzeuge im Freien stehen. Jeder Fahrzeugtyp hat eine spezifische Schadensrate, mit einem Basiswert von 10% pro Jahr. Bei empfindlicheren Maschinen wie Mähdreschern ist der Verschleiß mit 15 % pro Jahr höher, während Anhänger mit nur 5 % pro Jahr widerstandsfähiger sind, was eine vielfältige und dynamische Auswirkung auf den landwirtschaftlichen Betrieb gewährleistet. (Diese Werte gelten für den Fall, dass das Fahrzeug ein ganzes Jahr lang ohne Nutzung und bei klarem Wetter im Freien stehen würde).
+Im Basisspiel werden Fahrzeuge nur dann beschädigt, wenn die Ausrüstung in Gebrauch ist. ShelterMatters ändert dies, indem es eine passive Abnutzung einführt, wenn die Fahrzeuge im Freien stehen. Jeder Fahrzeugtyp hat eine spezifische Schadensrate, mit einem Basiswert von 10% pro Jahr. Bei empfindlicheren Maschinen wie Mähdreschern ist der Verschleiß mit 15 % pro Jahr höher, während Anhänger mit nur 5 % pro Jahr widerstandsfähiger sind, was eine vielfältige und dynamische Auswirkung auf den landwirtschaftlichen Betrieb gewährleistet. (Diese Werte gelten für den Fall, dass das Fahrzeug ein ganzes Jahr lang ohne Nutzung und bei klarem Wetter im Freien stehen würde).
 
-Auch die Witterungsbedingungen spielen eine entscheidende Rolle im Verschleißprozess. Fahrzeuge, die Regen ausgesetzt sind, können einen bis zu 5-fachen Verschleiß aufweisen, während Schnee zu einem 2-fachen Verschleiß führt, und selbst Nebel hat mit einem 1,5-fachen Multiplikator eine moderate Auswirkung. Die Lagerung von Geräten in geschlossenen Räumen mildert diese Auswirkungen und macht Schuppen zu einem wesentlichen Bestandteil der Betriebsführung.
+Auch die Witterungsbedingungen spielen eine entscheidende Rolle im Verschleißprozess. Fahrzeuge, die Regen ausgesetzt sind, können einen bis zu 5-fachen Verschleiß aufweisen, während Schnee einen 2-fachen Verschleiß zur Folge hat, und selbst Nebel hat mit einem 1,5-fachen Multiplikator eine moderate Auswirkung. Die Lagerung von Geräten in geschlossenen Räumen mildert diese Auswirkungen und macht Schuppen zu einem wichtigen Bestandteil der Betriebsführung.
 
-Mit ShelterMatters werden Schuppen und Lagergebäude zu einer notwendigen Investition, die echte Vorteile bietet, indem sie Ihre wertvolle Ausrüstung vor beschleunigtem Verschleiß schützt und die Wartungskosten im Laufe der Zeit reduziert. Diese Mod fügt dem Spiel eine strategische Ebene hinzu und macht die strategische Planung der Lagerhaltung zu einem wichtigen Aspekt einer effizienten Farmverwaltung.
-        
+Vorbei sind die Zeiten, in denen man seine Ballen ohne Konsequenzen auf dem Feld liegen lassen konnte! Neben den Fahrzeugen und Werkzeugen sind die Ballen jetzt auch der Witterung ausgesetzt. Ballen, die im Freien gelagert werden, verrotten mit der Zeit je nach den aktuellen Wetterbedingungen, was zum Verlust von wertvollem Futter und Material führen kann. Die Lagerung von Ballen in Schuppen oder überdachten Bereichen verhindert den Verfall vollständig und ermutigt Sie, in geeignete Lagerlösungen zu investieren, um finanzielle Verluste zu vermeiden.
+
+Mit ShelterMatters werden Schuppen und Lagergebäude zu einer notwendigen Investition, die echte Vorteile bietet, indem sie Ihre wertvolle Ausrüstung vor beschleunigtem Verschleiß schützt und die Wartungskosten mit der Zeit reduziert. Diese Mod fügt dem Spiel eine strategische Ebene hinzu und macht die strategische Lagerplanung zu einem wichtigen Aspekt einer effizienten Farmverwaltung.
+
 # Eigenschaften
 
-- Anhäufung von Beschädigungen: An Fahrzeugen und Werkzeugen, die draußen stehen, sammeln sich mit der Zeit Schäden an, auch wenn sie nicht in Gebrauch sind.
+- Anhäufung von Beschädigungen: Fahrzeuge und Werkzeuge, die draußen stehen, sammeln mit der Zeit Schaden an, auch wenn sie nicht benutzt werden.
+- Mechanik des Ballenverfalls: Ballen verrotten mit der Zeit, wenn sie ungünstigen Witterungsbedingungen ausgesetzt sind, was eine ordnungsgemäße Lagerung begünstigt.
 - Dynamische Innenraum-Erkennung: Erkennt automatisch Innenbereiche für alle platzierbaren Objekte auf der Karte.
 - Wettereinfluss: Die Wetterbedingungen beeinflussen die Schadensrate von Fahrzeugen. Bei Regen, Schnee und Nebel tritt mehr Verschleiß auf.
 - Konfigurierbare Raten: Server-Administratoren können Schadensraten und Wettermultiplikatoren über Befehle oder Konfigurationsdateien konfigurieren.
@@ -44,21 +50,24 @@ Mit ShelterMatters werden Schuppen und Lagergebäude zu einer notwendigen Invest
 https://github.com/depuits/FS22_ShelterMatters/releases/
         ]]></de>
         <fr><![CDATA[
-ShelterMatters est un mod pour Farming Simulator 22 qui renforce l'importance des hangars et des entrepôts intérieurs en introduisant des mécanismes d'usure des véhicules et des outils en fonction de leur exposition aux éléments.
+ShelterMatters est un mod pour Farming Simulator 22 qui met l'accent sur l'importance des hangars et du stockage intérieur en introduisant des mécanismes d'usure des véhicules et des outils, ainsi que de détérioration des balles, en fonction de leur exposition aux éléments, pour une expérience agricole plus immersive.
 
 Dans le jeu de base, les dommages aux véhicules ne se produisent que lorsque l'équipement est utilisé. ShelterMatters change cela en introduisant une usure passive au fil du temps lorsque les véhicules sont laissés à l'extérieur. Chaque type de véhicule a un taux de dommage spécifique, avec une base de 10% par an. Les machines plus sensibles, comme les moissonneuses, subissent une usure plus importante (15 % par an), tandis que les remorques sont plus résistantes (5 % par an), ce qui garantit un impact diversifié et dynamique sur les exploitations agricoles. (Ces taux sont calculés si le véhicule reste à l'extérieur pendant une année entière sans aucune utilisation et par temps clair).
 
-Les conditions météorologiques jouent également un rôle crucial dans le processus d'usure. Les véhicules exposés à la pluie peuvent subir une usure jusqu'à 5 fois plus importante, tandis que la neige entraîne une usure 2 fois plus importante, et que le brouillard a un impact modéré avec un multiplicateur de 1,5 fois. Le stockage du matériel à l'intérieur atténue ces effets, ce qui fait des hangars un élément essentiel de la gestion des exploitations agricoles.
+Les conditions météorologiques jouent également un rôle crucial dans le processus d'usure. Les véhicules exposés à la pluie peuvent subir une usure jusqu'à 5 fois plus importante, tandis que la neige entraîne une usure 2 fois plus importante, et même le brouillard a un impact modéré avec un multiplicateur de 1,5 fois. Le stockage du matériel à l'intérieur atténue ces effets, ce qui fait des hangars un élément essentiel de la gestion des exploitations agricoles.
 
-Avec ShelterMatters, les hangars et les bâtiments de stockage deviennent un investissement nécessaire, offrant de réels avantages en protégeant votre précieux équipement d'une usure accélérée et en réduisant les coûts d'entretien au fil du temps. Ce mod ajoute une couche stratégique au jeu, faisant de la planification stratégique du stockage un aspect important de la gestion efficace de la ferme.
+L'époque où l'on pouvait laisser ses balles dans le champ sans conséquences est révolue ! En plus des véhicules et des outils, les balles sont maintenant affectées par l'exposition aux intempéries. Les balles stockées à l'extérieur se détérioreront au fil du temps en fonction des conditions météorologiques, ce qui entraînera une perte potentielle d'aliments et de matières premières de valeur. Le stockage des balles dans des hangars ou des zones couvertes empêche complètement la détérioration, ce qui vous encourage à investir dans des solutions de stockage appropriées pour éviter les pertes financières.
+
+Avec ShelterMatters, les hangars et les bâtiments de stockage deviennent un investissement nécessaire, offrant de réels avantages en protégeant votre précieux équipement d'une usure accélérée et en réduisant les coûts d'entretien au fil du temps. Ce mod ajoute une couche stratégique au jeu, faisant de la planification stratégique du stockage un aspect important de la gestion efficace d'une ferme.         
 
 # Caractéristiques
 
-- Accumulation des dégâts : Les véhicules et les outils laissés à l'extérieur accumulent les dégâts au fil du temps, même s'ils ne sont pas utilisés.
+- Accumulation des dégâts : Les véhicules et les outils laissés à l'extérieur accumulent des dégâts au fil du temps, même s'ils ne sont pas utilisés.
+- Mécanisme de décomposition des balles : Les balles se détériorent au fil du temps lorsqu'elles sont exposées à des conditions météorologiques défavorables, ce qui incite à adopter des pratiques de stockage adéquates.
 - Détection dynamique des intérieurs : Détecte automatiquement les zones intérieures pour tous les objets placés sur la carte.
-- Impact des conditions météorologiques : Les conditions météorologiques influencent le taux d'endommagement des véhicules. L'usure est plus importante en cas de pluie, de neige ou de brouillard.
+- Impact des conditions météorologiques : Les conditions météorologiques influencent le taux de détérioration des véhicules. L'usure est plus importante en cas de pluie, de neige ou de brouillard.
 - Taux configurables : Les administrateurs de serveur peuvent configurer les taux de dégâts et les multiplicateurs météorologiques par le biais de commandes ou de fichiers de configuration.
-- Intégration des sauvegardes : La configuration est enregistrée par sauvegarde, ce qui permet d'appliquer des taux de dégâts différents selon les sauvegardes.
+- Intégration des sauvegardes : La configuration est enregistrée pour chaque sauvegarde, ce qui permet d'appliquer des taux de dégâts différents selon les sauvegardes.
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
         ]]></fr>

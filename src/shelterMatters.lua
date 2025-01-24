@@ -548,7 +548,7 @@ function ShelterMatters:smSetBaleWeatherDecay(weatherType, newRate)
 
     -- Update the rate
     self.baleWeatherDecay[weatherType] = newRate
-    print(string.format("Updated bale weather decay for '%s' to %.2f l/h", weatherType, newRate))
+    print(string.format("Updated bale weather decay for '%s' to %.2f L/h", weatherType, newRate))
 
     ShelterMattersSyncEvent.sendToClients()
 end
@@ -615,7 +615,7 @@ addConsoleCommand("smListBaleWeatherDecay", "Lists the bale decay values by weat
 function ShelterMatters:smListBaleWeatherDecay()
     print("=== Current Bale Decay by Weather ===")
     for weatherType, rate in pairs(self.baleWeatherDecay) do
-        print(string.format("Weather: %s, Rate: %.2f l/h", weatherType, rate))
+        print(string.format("Weather: %s, Rate: %.2f L/h", weatherType, rate))
     end
     print("=== End of List ===")
 end
