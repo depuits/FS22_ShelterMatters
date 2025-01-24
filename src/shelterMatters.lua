@@ -18,6 +18,14 @@ ShelterMatters.weatherMultipliers = {
     rain   = 5.0  -- severe increase in wear. constant moisture can cause rust and damage quickly.
 }
 
+-- default values for bale weather deterioration rates
+ShelterMatters.baleWeatherDecay = {
+    default = 0,    -- No deterioration, fair weather.
+    fog     = 1000, -- Slow deterioration due to prolonged moisture.
+    snow    = 2000, -- Moderate deterioration, moisture exposure.
+    rain    = 3000  -- Heavy deterioration due to water damage.
+}
+
 -- percentage of damage added to vehicle per game year
 ShelterMatters.damageRates = {
     default = 10,   -- 10% damage per in-game year when left outside. 
@@ -99,11 +107,31 @@ function ShelterMatters:draw()
             end
         end
 
-        local isInside = ShelterMatters.isInShed(vehicle)
+        local isInside = ShelterMatters.isVehicleInShed(vehicle)
         local icon = isInside and ShelterMatters.insideIcon or ShelterMatters.outsideIcon
 
         renderOverlay(icon, startX, startY, iconWidth, iconHeight)
     end
+end
+
+function ShelterMatters:getWeather()
+    local weatherSystem = g_currentMission.environment.weather
+    local weatherType = weatherSystem:getCurrentWeatherType()
+
+    --local weatherObject = weatherSystem.typeToWeatherObject[weatherType]
+    --DebugUtil.printTableRecursively(weatherObject, "Wheater: ", 0, 1)
+
+    -- Map the weather type to a string
+    -- TODO debug if these values are correct
+    local weatherTypes = {
+        [1] = "sunny",
+        [2] = "cloudy",
+        [3] = "rain",
+        [4] = "fog",
+        [5] = "snow",
+    }
+
+    return weatherTypes[weatherType] or "UNKNOWN"
 end
 
 --[[
@@ -129,55 +157,64 @@ function ShelterMatters:update(dt)
         elapsedInGameHours = elapsedInGameHours + 24 -- Handle midnight rollover
     end
 
-    -- Update last recorded in-game time
-    self.lastUpdateInGameTime = currentInGameTime
-
-    -- Skip if no time has passed
-    if elapsedInGameHours <= 0 then
+    -- only execute the update logic once every ingame minute
+    if elapsedInGameHours * 60 < 1 then
         return
     end
 
+    -- Update last recorded in-game time
+    self.lastUpdateInGameTime = currentInGameTime
+
     -- Get effect of the current weather
-    local weatherMultiplier = self:weatherMultiplier()
+    local weather = self:getWeather()
+    local weatherMultiplier = self.weatherMultipliers[weather] or 1
 
     -- Apply the damages to vehicles left outside
     for _, vehicle in pairs(g_currentMission.vehicles) do
         self:updateDamageAmount(vehicle, elapsedInGameHours, weatherMultiplier)
     end
+
+    -- Apply the damages to bales left outside
+    local weatherDecay = self.baleWeatherDecay[weather] or self.baleWeatherDecay.default or 0
+    self:updateAllBalesDamage(elapsedInGameHours, weatherDecay)
 end
 
-function ShelterMatters:weatherMultiplier(debugPrint)
-    local weatherSystem = g_currentMission.environment.weather
-    local weatherType = weatherSystem:getCurrentWeatherType()
-
-    --local weatherObject = weatherSystem.typeToWeatherObject[weatherType]
-    --DebugUtil.printTableRecursively(weatherObject, "Wheater: ", 0, 1)
-
-    -- Map the weather type to a string
-    -- TODO debug if these values are correct
-    local weatherTypes = {
-        [1] = "sunny",
-        [2] = "cloudy",
-        [3] = "rain",
-        [4] = "fog",
-        [5] = "snow",
-    }
-
-    local weatherDescription = weatherTypes[weatherType] or "UNKNOWN"
-    local multiplier = self.weatherMultipliers[weatherDescription] or 1
-
-    if debugPrint then
-        print(string.format("Weather: %s, applying multiplier: %.2f", weatherDescription, multiplier))
+function ShelterMatters:updateAllBalesDamage(elapsedInGameHours, rate) 
+    if rate <= 0 then
+        return -- if no bale damage should apply
     end
 
-    return multiplier
+    for _, saveItem in pairs(g_currentMission.itemSystem.itemsToSave) do
+        -- Check if the object is a bale by checking its class name
+        if saveItem.className == "Bale" then
+            self:updateBaleDamage(saveItem.item, elapsedInGameHours, rate)
+        end
+    end
+end
+function ShelterMatters:updateBaleDamage(bale, elapsedInGameHours, rate)
+    if bale.wrappingState == 1 then
+        return -- no damage is applied when the bale is wrapped
+    end
+
+    local inShed = ShelterMatters.isNodeInShed(bale.nodeId)
+    if not inShed then
+        local outsideDamage = (rate * elapsedInGameHours)
+        bale.fillLevel = bale.fillLevel - outsideDamage
+
+        if bale.fillLevel > 0 then
+            -- send new fill level to all clients
+            g_server:broadcastEvent(shelterMattersBaleDamageEvent.new(bale))
+        else
+            bale:delete();
+        end
+    end
 end
 
 function ShelterMatters:getVehicleDetailsString(vehicle)
     local typeName = vehicle.typeName
     local damageRate = self.damageRates[typeName] or self.damageRates.default
 
-    local inShed = ShelterMatters.isInShed(vehicle)
+    local inShed = ShelterMatters.isVehicleInShed(vehicle)
 
     return ("Entity type: " .. (vehicle.typeName or "unknown") ..
         "\nEntity name: " .. vehicle:getFullName() ..
@@ -199,8 +236,7 @@ function ShelterMatters:updateDamageAmount(vehicle, elapsedInGameHours, multipli
         return
     end
 
-    local inShed = ShelterMatters.isInShed(vehicle)
-
+    local inShed = ShelterMatters.isVehicleInShed(vehicle)
     if not inShed then
         local baseOutsideDamage = self:getDamageRate(vehicle) -- damage percentage per ingame hour
         local outsideDamage = (baseOutsideDamage * multiplier * elapsedInGameHours)
@@ -211,38 +247,26 @@ end
 
 function ShelterMatters:getDamageRate(vehicle)
     local typeName = vehicle.typeName
-    local damageRate = self.damageRates[typeName] or self.damageRates.default
+    local damageRate = self.damageRates[typeName] or self.damageRates.default or 10
 
     -- calculate float percentage = value / percentage / hours / days / months
     local damageRateScaled = damageRate / 100 / 24 / g_currentMission.environment.daysPerPeriod / 12
     return damageRateScaled
 end
 
-function ShelterMatters.isInShed(vehicle)
-    for _, placeable in pairs(g_currentMission.placeableSystem.placeables) do
-        if ShelterMatters.isVehicleInsideIndoorArea(vehicle, placeable) then
-            return true
-        end
-    end
-    return false
+function ShelterMatters.isVehicleInShed(vehicle)
+    return ShelterMatters.isNodeInShed(vehicle.rootNode)
 end
 
--- Function to check if a vehicle is inside any indoor area of a placeable
-function ShelterMatters.isVehicleInsideIndoorArea(vehicle, placeable)
-    if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
-        return false
-    end
+function ShelterMatters.isNodeInShed(node)
+    -- Get the node's position
+    local vx, vy, vz = getWorldTranslation(node)
 
-    -- Get the vehicle's position
-    local vx, vy, vz = getWorldTranslation(vehicle.rootNode)
-
-    -- Check all indoor areas
-    for _, indoorArea in ipairs(placeable.spec_indoorAreas.areas) do
-        if ShelterMatters.isPointInsideIndoorArea(vx, vy, vz, indoorArea, placeable) then
+    for _, placeable in pairs(g_currentMission.placeableSystem.placeables) do
+        if ShelterMatters.isPointInsideplaceable(vx, vy, vz, placeable) then
             return true
         end
     end
-
     return false
 end
 
@@ -252,6 +276,29 @@ local function calculateDistance(x1, y1, z1, x2, y2, z2)
     local dy = y2 - y1
     local dz = z2 - z1
     return math.sqrt(dx * dx + dy * dy + dz * dz)
+end
+
+-- Function to check if a vehicle is inside any indoor area of a placeable
+function ShelterMatters.isPointInsideplaceable(x, y, z, placeable)
+    if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
+        return false
+    end
+
+    local rootX, rootY, rootZ = getWorldTranslation(placeable.rootNode)
+    local distance = calculateDistance(x, y, z, rootX, rootY, rootZ)
+    -- optimization: no shed is bigger then 200 meters so we don't check when obtjects are further away then 100m from the placeable center
+    if distance > 100 then
+        return false
+    end
+
+    -- Check all indoor areas
+    for _, indoorArea in ipairs(placeable.spec_indoorAreas.areas) do
+        if ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable) then
+            return true
+        end
+    end
+
+    return false
 end
 
 function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
@@ -293,9 +340,7 @@ function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
     local withinX = localX >= minX and localX <= maxX
     local withinZ = localZ >= minZ and localZ <= maxZ
 
---[[    local distance = calculateDistance(x, y, z, startX, startY, startZ)
-
-    if distance < 50 then
+--[[if distance < 50 then
         ShelterMatters.log("placeable: " .. (placeable.typeName or "unknown") .. string.format(" Distance to Start Node: %.2f", distance))
 
         ShelterMatters.log(string.format(" placeable rot: x %.2f, y %.2f, z %.2f", rotX, rotY, rotZ))
@@ -314,7 +359,6 @@ function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
 
     return withinX and withinZ
 end
-
 
 
 
@@ -356,6 +400,14 @@ function ShelterMatters:saveConfig()
         local key = string.format("ShelterMatters.weatherMultipliers.multiplier(%d)", i)
         setXMLString(xmlFile, key .. "#type", weatherType)
         setXMLFloat(xmlFile, key .. "#multiplier", multiplier)
+        i = i + 1
+    end
+
+    i = 0 -- reset i counter
+    for weatherType, rate in pairs(self.baleWeatherDecay) do
+        local key = string.format("ShelterMatters.baleWeatherDecay.rate(%d)", i)
+        setXMLString(xmlFile, key .. "#type", weatherType)
+        setXMLFloat(xmlFile, key .. "#rate", multiplier)
         i = i + 1
     end
 
@@ -414,6 +466,22 @@ function ShelterMatters:loadConfig()
         i = i + 1
     end
 
+    i = 0 -- reset i counter
+    while true do
+        local key = string.format("ShelterMatters.baleWeatherDecay.rate(%d)", i)
+        local weatherType = getXMLString(xmlFile, key .. "#type")
+        if not weatherType then
+            break
+        end
+
+        local rate = getXMLFloat(xmlFile, key .. "#rate")
+        if rate then
+            self.baleWeatherDecay[weatherType] = rate
+        end
+
+        i = i + 1
+    end
+
     delete(xmlFile)
     ShelterMatters.log("Configuration loaded from: " .. configFile)
 end
@@ -459,7 +527,28 @@ function ShelterMatters:smSetWeatherMultiplier(weatherType, newMultiplier)
 
     -- Update the rate
     self.weatherMultipliers[weatherType] = newMultiplier
-    print(string.format("Updated weather multiplier for type '%s' to %.2f", weatherType, newMultiplier))
+    print(string.format("Updated weather multiplier for '%s' to %.2f", weatherType, newMultiplier))
+
+    ShelterMattersSyncEvent.sendToClients()
+end
+
+addConsoleCommand("smSetBaleWeatherDecay", "Updates the bale weather decay rate associated with a specific weather type", "smSetBaleWeatherDecay", ShelterMatters)
+function ShelterMatters:smSetBaleWeatherDecay(weatherType, newRate)
+    if not g_currentMission:getIsServer() then
+        print("Changes can only be done on the server.")
+        return
+    end
+
+    -- Validate the input
+    newRate = tonumber(newRate)
+    if not newRate or newRate < 0 then
+        print("Invalid multiplier. Must be a positive number.")
+        return
+    end
+
+    -- Update the rate
+    self.baleWeatherDecay[weatherType] = newRate
+    print(string.format("Updated bale weather decay for '%s' to %.2f l/h", weatherType, newRate))
 
     ShelterMattersSyncEvent.sendToClients()
 end
@@ -498,7 +587,10 @@ end
 
 addConsoleCommand("smCurrentWeather", "Displays the current weather conditions and their associated multiplier", "smCurrentWeather", ShelterMatters)
 function ShelterMatters:smCurrentWeather()
-    self:weatherMultiplier(true)
+    local weather = self:getWeather()
+    local multiplier = self.weatherMultipliers[weather] or 1
+
+    print(string.format("Weather: %s, applying multiplier: %.2f", weather, multiplier))
 end
 
 addConsoleCommand("smListDamageRates", "Lists the current damage rates for all vehicle types", "smListDamageRates", ShelterMatters)
@@ -515,6 +607,15 @@ function ShelterMatters:smListWeatherMultipliers()
     print("=== Current Weather Multipliers ===")
     for weatherType, multiplier in pairs(self.weatherMultipliers) do
         print(string.format("Weather: %s, Multiplier: %.2f", weatherType, multiplier))
+    end
+    print("=== End of List ===")
+end
+
+addConsoleCommand("smListBaleWeatherDecay", "Lists the bale decay values by weather, showing how different weather conditions impact bales left outside", "smListBaleWeatherDecay", ShelterMatters)
+function ShelterMatters:smListBaleWeatherDecay()
+    print("=== Current Bale Decay by Weather ===")
+    for weatherType, rate in pairs(self.baleWeatherDecay) do
+        print(string.format("Weather: %s, Rate: %.2f l/h", weatherType, rate))
     end
     print("=== End of List ===")
 end
