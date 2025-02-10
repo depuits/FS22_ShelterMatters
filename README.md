@@ -137,7 +137,7 @@ Example:
 
 ### Disabling Bale Decay
 
-You can diable the decay of bales by setting all the `baleWeatherDecay` rates to `0`. This will also completly skip the indoors check for bales.
+You can disable the decay of bales by setting all the `baleWeatherDecay` rates to `0`. This will also completly skip the indoors check for bales.
 
 ## Commands
 
