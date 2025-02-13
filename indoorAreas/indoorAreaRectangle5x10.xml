@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<placeable type="shelterMattersIndoorArea" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../shared/xml/schema/placeable.xsd">
+    <parentFile xmlFilename="indoorAreas/indoorAreaSquare.xml">
+        <attributes>
+            <set path="placeable.storeData.name" value="$l10n_SM_IndoorAreaRectangle5x10"/>
+            <set path="placeable.storeData.image" value="indoorAreas/store_indoorAreaRectangle5x10.png"/>
+            <set path="placeable.base.objectChanges.objectChange(0)#scaleActive" value="5 1 10"/>
+            <set path="placeable.base.objectChanges.objectChange(1)#scaleActive" value="5 1 10"/>
+            <set path="placeable.base.objectChanges.objectChange(2)#translationActive" value="-5 0 0"/>
+            <set path="placeable.base.objectChanges.objectChange(3)#translationActive" value="0 0 -10"/>
+            <set path="placeable.base.objectChanges.objectChange(4)#scaleActive" value="5 1 10"/>
+         </attributes>
+    </parentFile>
+
+    <!-- ONLY FOR ICON GENERATION -->
+    <storeData>
+        <name>$l10n_SM_IndoorAreaRectangle5x10</name>
+        <image>indoorAreas/store_indoorAreaRectangle5x10.png</image>
+        <brand>NONE</brand>
+        <species>placeable</species>
+        <category>animalpens</category>
+        <vertexBufferMemoryUsage>0</vertexBufferMemoryUsage>
+        <indexBufferMemoryUsage>0</indexBufferMemoryUsage>
+        <textureMemoryUsage>0</textureMemoryUsage>
+        <audioMemoryUsage>0</audioMemoryUsage>
+        <instanceVertexBufferMemoryUsage>0</instanceVertexBufferMemoryUsage>
+        <instanceIndexBufferMemoryUsage>0</instanceIndexBufferMemoryUsage>
+    </storeData>
+</placeable>

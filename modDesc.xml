@@ -78,9 +78,33 @@ https://github.com/depuits/FS22_ShelterMatters/releases/
     <iconFilename>icon_ShelterMatters.dds</iconFilename>
     <multiplayer supported="true"/>
 
+    <l10n filenamePrefix="translations/translation"/>
+
     <extraSourceFiles>
         <sourcefile filename="src/shelterMatters.lua"/>
         <sourcefile filename="src/shelterMattersSyncEvent.lua"/>
         <sourcefile filename="src/shelterMattersBaleDamageEvent.lua"/>
     </extraSourceFiles>
+
+    <placeableSpecializations>
+        <specialization name="shelterMattersIndoorArea" className="ShelterMattersIndoorArea" filename="src/shelterMattersIndoorArea.lua"/>
+    </placeableSpecializations>
+
+    <placeableTypes>
+        <type name="shelterMattersIndoorArea" parent="simplePlaceable" filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="shelterMattersIndoorArea" />
+        </type>
+    </placeableTypes>
+
+    <storeItems>
+        <storeItem xmlFilename="indoorAreas/indoorAreaSquare5x5.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaSquare10x10.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaSquare25x25.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaSquare50x50.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaRectangle5x10.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaRectangle5x25.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaRectangle10x25.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaRectangle10x50.xml"/>
+        <storeItem xmlFilename="indoorAreas/indoorAreaRectangle25x50.xml"/>
+    </storeItems>
 </modDesc>

@@ -1,6 +1,8 @@
 -- @Author: Depuits
 
-ShelterMatters = {}
+ShelterMatters = {
+    COLLISION_MASK = 20
+}
 ShelterMatters.name = g_currentModName
 ShelterMatters.modDirectory = g_currentModDirectory
 ShelterMatters.lastUpdateInGameTime = nil -- Global variable to track the last update time
@@ -73,10 +75,46 @@ function ShelterMatters:loadMap(name)
    
         self:loadConfig()
     end
+
+    ConstructionScreen.setBrush = Utils.appendedFunction(ConstructionScreen.setBrush, self.indoorAreasShow)
+    ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, self.indoorAreasHide)
+
 end
 
 function ShelterMatters.loadSettingsFromServer()
     ShelterMattersSyncEvent.sendToServer()
+end
+
+function ShelterMatters.indoorAreasShow()
+    ShelterMatters:indoorAreasVisibility(true)
+end
+function ShelterMatters.indoorAreasHide()
+    ShelterMatters:indoorAreasVisibility(false)
+end
+
+function ShelterMatters:indoorAreasVisibility(visible)
+    ShelterMatters.shouldShowIndoorAreas = visible
+    local allPlaceables = g_currentMission.placeableSystem.placeables
+
+    for placeableIndex, placeable in ipairs(allPlaceables) do
+        if placeable.spec_shelterMattersIndoorArea ~= nil  then
+            setVisibility(placeable.spec_shelterMattersIndoorArea.helperNavMeshPlane, visible)
+            self:updateRigidBodyType(placeable.spec_shelterMattersIndoorArea.collision, visible)
+        end
+    end
+end
+
+function ShelterMatters:updateRigidBodyType(node, visible)
+    if node == nil then
+        return
+    end
+
+    if visible then
+        setRigidBodyType(node, RigidBodyType.STATIC)
+        setCollisionMask(node, ShelterMatters.COLLISION_MASK)
+    else
+        setRigidBodyType(node, RigidBodyType.NONE)
+    end
 end
 
 function ShelterMatters.save()

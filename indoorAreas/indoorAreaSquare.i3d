@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<i3D name="indoorAreaSquare.i3d" version="1.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://i3d.giants.ch/schema/i3d-1.6.xsd">
+  <Asset>
+    <Export program="GIANTS Editor 64bit" version="9.0.4"/>
+  </Asset>
+
+  <Files>
+    <File fileId="1" filename="../materials/mat.dds"/>
+    <File fileId="2" filename="$data/shaders/glowShader.xml"/>
+  </Files>
+
+
+  <Materials>
+    <Material name="navMeshHelper_mat" materialId="5" alphaBlending="true" customShaderId="2">
+      <Texture fileId="1"/>
+    </Material>
+  </Materials>
+
+
+  <Shapes externalShapesFile="indoorAreaSquare.i3d.shapes">
+  </Shapes>
+
+
+  <Dynamics>
+  </Dynamics>
+
+  <Scene>
+      <TransformGroup name="navMeshPlaceholder" nodeId="9">
+        <Shape shapeId="1" name="plane" visibility="false" nodeId="10" materialIds="5" castsShadows="true" receiveShadows="true" buildNavMeshMask="254"/>
+        <TransformGroup name="collision" nodeId="11">
+          <Shape shapeId="2" name="collision" visibility="false" static="true" collisionMask="0" nodeId="12" materialIds="5" castsShadows="true" nonRenderable="true"/>
+        </TransformGroup>
+        <TransformGroup name="animalGrazingAreas" nodeId="13">
+          <TransformGroup name="animalGrazingArea1Start" nodeId="14">
+            <TransformGroup name="animalGrazingArea1Height" translation="0 0 -1" nodeId="15"/>
+            <TransformGroup name="animalGrazingArea1Width" translation="-1 0 0" nodeId="16"/>
+          </TransformGroup>
+        </TransformGroup>
+        <Shape shapeId="2" name="infoTrigger" visibility="false" static="true" trigger="true" collisionMask="1048576" nodeId="17" materialIds="5" castsShadows="true" nonRenderable="true"/>
+      </TransformGroup>
+  </Scene>
+
+</i3D>

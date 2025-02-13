@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<l10n>
+    <texts>		
+        <text name="SM_IndoorArea"                      text="An area which should be considered inside."/>
+        <text name="SM_IndoorAreaSquare"                text="Indoor area square"/>
+        <text name="SM_IndoorAreaSquare5x5"             text="Indoor area square 5x5"/>
+        <text name="SM_IndoorAreaSquare10x10"           text="Indoor area square 10x10"/>
+        <text name="SM_IndoorAreaSquare25x25"           text="Indoor area square 25x25"/>
+        <text name="SM_IndoorAreaSquare50x50"           text="Indoor area square 50x50"/>
+        <text name="SM_IndoorAreaRectangle5x10"         text="Indoor area rectangle 5x10"/>
+        <text name="SM_IndoorAreaRectangle5x25"         text="Indoor area rectangle 5x25"/>
+        <text name="SM_IndoorAreaRectangle10x25"        text="Indoor area rectangle 10x25"/>
+        <text name="SM_IndoorAreaRectangle10x50"        text="Indoor area rectangle 10x50"/>
+        <text name="SM_IndoorAreaRectangle25x50"        text="Indoor area rectangle 25x50"/>
+    </texts>
+</l10n>
