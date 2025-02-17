@@ -8,7 +8,6 @@
             <set path="placeable.base.objectChanges.objectChange(1)#scaleActive" value="25 1 50"/>
             <set path="placeable.base.objectChanges.objectChange(2)#translationActive" value="-25 0 0"/>
             <set path="placeable.base.objectChanges.objectChange(3)#translationActive" value="0 0 -50"/>
-            <set path="placeable.base.objectChanges.objectChange(4)#scaleActive" value="25 1 50"/>
          </attributes>
     </parentFile>
 
@@ -18,7 +17,7 @@
         <image>indoorAreas/store_indoorAreaRectangle25x50.png</image>
         <brand>NONE</brand>
         <species>placeable</species>
-        <category>animalpens</category>
+        <category>sheds</category>
         <vertexBufferMemoryUsage>0</vertexBufferMemoryUsage>
         <indexBufferMemoryUsage>0</indexBufferMemoryUsage>
         <textureMemoryUsage>0</textureMemoryUsage>

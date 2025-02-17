@@ -31,13 +31,12 @@
         <TransformGroup name="collision" nodeId="11">
           <Shape shapeId="2" name="collision" visibility="false" static="true" collisionMask="0" nodeId="12" materialIds="5" castsShadows="true" nonRenderable="true"/>
         </TransformGroup>
-        <TransformGroup name="animalGrazingAreas" nodeId="13">
-          <TransformGroup name="animalGrazingArea1Start" nodeId="14">
-            <TransformGroup name="animalGrazingArea1Height" translation="0 0 -1" nodeId="15"/>
-            <TransformGroup name="animalGrazingArea1Width" translation="-1 0 0" nodeId="16"/>
+        <TransformGroup name="aindoorAreas" nodeId="13">
+          <TransformGroup name="indoorArea1Start" nodeId="14">
+            <TransformGroup name="indoorArea1Height" translation="0 0 -1" nodeId="15"/>
+            <TransformGroup name="indoorArea1Width" translation="-1 0 0" nodeId="16"/>
           </TransformGroup>
         </TransformGroup>
-        <Shape shapeId="2" name="infoTrigger" visibility="false" static="true" trigger="true" collisionMask="1048576" nodeId="17" materialIds="5" castsShadows="true" nonRenderable="true"/>
       </TransformGroup>
   </Scene>
 

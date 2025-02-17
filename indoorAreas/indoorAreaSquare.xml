@@ -25,9 +25,8 @@
         <objectChanges>
             <objectChange node="plane" scaleActive="1 1 1"/>
             <objectChange node="collision" scaleActive="1 1 1"/>
-            <objectChange node="animalGrazingArea1Width" translationActive="-1 0 0"/>
-            <objectChange node="animalGrazingArea1Height" translationActive="0 0 -1"/>
-            <objectChange node="infoTrigger" scaleActive="1 1 1"/>
+            <objectChange node="indoorArea1Width" translationActive="-1 0 0"/>
+            <objectChange node="indoorArea1Height" translationActive="0 0 -1"/>
         </objectChanges>
         <boughtWithFarmland>true</boughtWithFarmland>
     </base>
@@ -41,7 +40,7 @@
     <clearAreas/>
 
     <indoorAreas>
-        <indoorArea startNode="animalGrazingArea1Start" widthNode="animalGrazingArea1Width" heightNode="animalGrazingArea1Height" />
+        <indoorArea startNode="indoorArea1Start" widthNode="indoorArea1Width" heightNode="indoorArea1Height" />
     </indoorAreas>
 
     <ai>
@@ -56,9 +55,8 @@
         <i3dMapping id="root" node="0" />
         <i3dMapping id="plane" node="0>0" />
         <i3dMapping id="collision" node="0>1|0" />
-        <i3dMapping id="animalGrazingArea1Start" node="0>2|0" />
-        <i3dMapping id="animalGrazingArea1Width" node="0>2|0|0" />
-        <i3dMapping id="animalGrazingArea1Height" node="0>2|0|1" />
-        <i3dMapping id="infoTrigger" node="0>3" />
+        <i3dMapping id="indoorArea1Start" node="0>2|0" />
+        <i3dMapping id="indoorArea1Width" node="0>2|0|0" />
+        <i3dMapping id="indoorArea1Height" node="0>2|0|1" />
     </i3dMappings>
 </placeable>
