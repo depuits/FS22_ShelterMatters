@@ -21,6 +21,7 @@ With ShelterMatters, sheds and storage buildings become a necessary investment, 
 - **Weather Impact**: Weather conditions influence the damage rate of vehicles. More wear occurs during rain, snow, and fog.
 - **Configurable Rates**: Server admins can configure damage rates and weather multipliers through commands or configuration files.
 - **Savegame Integration**: Configuration is saved per savegame, allowing different damage rates across various saves.
+- **Custom Indoor Areas**: Placeable indoor area markers (found under Buildings → Sheds) allow you to define indoor spaces for buildings without built-in indoor detection.
 
 ---
 
@@ -30,12 +31,15 @@ With ShelterMatters, sheds and storage buildings become a necessary investment, 
 2. Place the file in your Farming Simulator 22 mods folder, typically located at: `Documents/My Games/FarmingSimulator2022/mods`.
 3. Launch the game and enable the mod in the "Installed Mods" section.
 
+> **Tip**: To ensure proper indoor detection, especially on custom maps, use the included **Indoor Area placeables** (*Buildings → Sheds*) to define sheltered zones.
+
 ### Uninstalling
 
 If you decide that the ShelterMatters mod does not fit your playstyle, you can easily remove it without affecting your savegame. Follow these simple steps to uninstall the mod safely:
 
-1. Disable the mod in your savegame from the "Installed Mods" section in the main menu.
-2. (Optional) Delete the FS22_ShelterMatters.zip file from your mods folder, typically located at: `Documents/My Games/FarmingSimulator2022/mods`.
+1. Sell or remove any placed Indoor Area placeables before uninstalling to avoid lingering objects in your savegame.
+2. Disable the mod in your savegame from the "Installed Mods" section in the main menu.
+3. (Optional) Delete the FS22_ShelterMatters.zip file from your mods folder, typically located at: `Documents/My Games/FarmingSimulator2022/mods`.
 
 That's it! Your savegame will continue to work as normal without the mod.
 
@@ -46,6 +50,7 @@ That's it! Your savegame will continue to work as normal without the mod.
 ### How It Works
 - Vehicles and tools left outdoors will slowly accumulate damage, even when idle.
 - The mod uses the `indoorAreas` of placeables to detect whether equipment is stored properly.
+- If a building lacks defined indoor areas (common in custom maps), you can use the Indoor Area placeables included in the mod to manually define them.
 
 ### Weather Interaction
 - Damage and wear accumulation rates are influenced by the current weather. For example:
@@ -289,9 +294,17 @@ The ShelterMatters mod is compatible with multiplayer. The configuration and dam
 ## Troubleshooting
 
 ### Common Issues
-**Q: Vehicles are not recognized as "inside."**
+**Q: Vehicles are not recognized as "inside".**
 - Ensure the shed or placeable has a properly defined indoor area.
 - Move the vehicle slightly to ensure it is within the boundaries.
+
+**Q: Buildings do not provide indoor detection.**
+- Some placeables or map buildings may **lack defined indoor areas**, particularly static buildings on custom maps (**non-selectable in construction mode**).
+- **➡️ Solution**:
+    - Use the **Indoor Area placeables** included in this mod (**Buildings → Sheds**) to manually define indoor zones.
+    - This ensures vehicles, tools, bales, and pallets stored within these areas are correctly recognized as "inside."
+
+![Indoor area placeables](screenshots/indoorAreas.jpg)
 
 **Q: I’m not seeing any changes in wear or damage.**
 - Verify that the mod is enabled in your save game.
