@@ -88,7 +88,12 @@ jobs:
           # Delete the tag remotely if it exists
           git push origin ":refs/tags/${{ env.RELEASE_TAG }}" || echo "Tag ${{ env.RELEASE_TAG }} not found remotely."
 
-      # Step 7: Create Release on GitHub
+      # Step 7: Wait 30 seconds to make sure the previous release is removed
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
+        
+      # Step 8: Create Release on GitHub
       - name: Create GitHub Release
         uses: actions/github-script@v6
         with:
