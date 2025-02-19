@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <l10n>
-    <texts>		
+    <texts>
         <text name="SM_IndoorArea"                      text="An area which should be considered inside."/>
         <text name="SM_IndoorAreaSquare"                text="Indoor area square"/>
         <text name="SM_IndoorAreaSquare5x5"             text="Indoor area square 5x5"/>

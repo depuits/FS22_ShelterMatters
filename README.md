@@ -65,10 +65,10 @@ ShelterMatters provides an on-screen indication showing whether the **currently 
 Below is an example of the shelter indication for a vehicle inside and outside a shed.
 
 **Inside a Shelter**  
-![Inside Shelter Example](indicationInside.jpg)
+![Inside Shelter Example](screenshots/indicationInside.jpg)
 
 **Outside a Shelter**  
-![Outside Shelter Example](indicationOutside.jpg)
+![Outside Shelter Example](screenshots/indicationOutside.jpg)
 
 This icon can be disabled using the [`smToggleShelterStatusIcon` command](#toggle-icon-status) or by editing the save file.
 

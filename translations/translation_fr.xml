@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<l10n>
+    <texts>
+        <text name="SM_IndoorArea"                      text="Un domaine qui devrait être considéré à l'intérieur."/>
+        <text name="SM_IndoorAreaSquare"                text="Espace intérieur carré"/>
+        <text name="SM_IndoorAreaSquare5x5"             text="Espace intérieur carré 5x5"/>
+        <text name="SM_IndoorAreaSquare10x10"           text="Espace intérieur carré 10x10"/>
+        <text name="SM_IndoorAreaSquare25x25"           text="Espace intérieur carré 25x25"/>
+        <text name="SM_IndoorAreaSquare50x50"           text="Espace intérieur carré 50x50"/>
+        <text name="SM_IndoorAreaRectangle5x10"         text="Espace intérieur rectangle 5x10"/>
+        <text name="SM_IndoorAreaRectangle5x25"         text="Espace intérieur rectangle 5x25"/>
+        <text name="SM_IndoorAreaRectangle10x25"        text="Espace intérieur rectangle 10x25"/>
+        <text name="SM_IndoorAreaRectangle10x50"        text="Espace intérieur rectangle 10x50"/>
+        <text name="SM_IndoorAreaRectangle25x50"        text="Espace intérieur rectangle 25x50"/>
+    </texts>
+</l10n>
