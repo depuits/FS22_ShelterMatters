@@ -79,6 +79,7 @@ function ShelterMatters:loadMap(name)
     ConstructionScreen.setBrush = Utils.appendedFunction(ConstructionScreen.setBrush, self.indoorAreasShow)
     ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, self.indoorAreasHide)
 
+    Bale.showInfo = Utils.appendedFunction(Bale.showInfo, ShelterMatters.showInfoBale)
 end
 
 function ShelterMatters.loadSettingsFromServer()
@@ -243,9 +244,14 @@ function ShelterMatters:updateBaleDamage(bale, elapsedInGameHours, rate)
             -- send new fill level to all clients
             g_server:broadcastEvent(shelterMattersBaleDamageEvent.new(bale))
         else
-            bale:delete();
+            bale:delete()
+            g_currentMission:addIngameNotification(FSBaseMission.INGAME_NOTIFICATION_CRITICAL, g_i18n:getText("SM_AlertBaleDeleted"))
         end
     end
+end
+
+function ShelterMatters:showInfoBale(box)
+    box:addLine(g_i18n:getText("SM_InfoBaleDecay"), string.format("%d%%", 50))
 end
 
 function ShelterMatters:getVehicleDetailsString(vehicle)
