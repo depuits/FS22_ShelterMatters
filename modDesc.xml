@@ -83,6 +83,7 @@ https://github.com/depuits/FS22_ShelterMatters/releases/
     <extraSourceFiles>
         <sourcefile filename="src/shelterMatters.lua"/>
         <sourcefile filename="src/shelterMattersSyncEvent.lua"/>
+        <sourcefile filename="src/shelterMattersBale.lua"/>
         <sourcefile filename="src/shelterMattersBaleDamageEvent.lua"/>
     </extraSourceFiles>
 

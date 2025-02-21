@@ -79,7 +79,7 @@ function ShelterMatters:loadMap(name)
     ConstructionScreen.setBrush = Utils.appendedFunction(ConstructionScreen.setBrush, self.indoorAreasShow)
     ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, self.indoorAreasHide)
 
-    Bale.showInfo = Utils.appendedFunction(Bale.showInfo, ShelterMatters.showInfoBale)
+    ShelterMattersBale.registerFunctions()
 end
 
 function ShelterMatters.loadSettingsFromServer()
@@ -226,32 +226,9 @@ function ShelterMatters:updateAllBalesDamage(elapsedInGameHours, rate)
     for _, saveItem in pairs(g_currentMission.itemSystem.itemsToSave) do
         -- Check if the object is a bale by checking its class name
         if saveItem.className == "Bale" then
-            self:updateBaleDamage(saveItem.item, elapsedInGameHours, rate)
+            ShelterMattersBale.updateBaleDamage(saveItem.item, elapsedInGameHours, rate)
         end
     end
-end
-function ShelterMatters:updateBaleDamage(bale, elapsedInGameHours, rate)
-    if bale.wrappingState == 1 then
-        return -- no damage is applied when the bale is wrapped
-    end
-
-    local inShed = ShelterMatters.isNodeInShed(bale.nodeId)
-    if not inShed then
-        local outsideDamage = (rate * elapsedInGameHours)
-        bale.fillLevel = bale.fillLevel - outsideDamage
-
-        if bale.fillLevel > 0 then
-            -- send new fill level to all clients
-            g_server:broadcastEvent(shelterMattersBaleDamageEvent.new(bale))
-        else
-            bale:delete()
-            g_currentMission:addIngameNotification(FSBaseMission.INGAME_NOTIFICATION_CRITICAL, g_i18n:getText("SM_AlertBaleDeleted"))
-        end
-    end
-end
-
-function ShelterMatters:showInfoBale(box)
-    box:addLine(g_i18n:getText("SM_InfoBaleDecay"), string.format("%d%%", 50))
 end
 
 function ShelterMatters:getVehicleDetailsString(vehicle)
