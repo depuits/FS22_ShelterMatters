@@ -20,7 +20,7 @@ ShelterMatters.weatherMultipliers = {
     rain   = 5.0  -- severe increase in wear. constant moisture can cause rust and damage quickly.
 }
 
--- default values for bale weather deterioration rates
+-- default values for bale weather deterioration rates per game hour
 ShelterMatters.baleWeatherDecay = {
     default = 0,    -- No deterioration, fair weather.
     fog     = 1000, -- Slow deterioration due to prolonged moisture.
@@ -428,7 +428,7 @@ function ShelterMatters:saveConfig()
     for weatherType, rate in pairs(self.baleWeatherDecay) do
         local key = string.format("ShelterMatters.baleWeatherDecay.rate(%d)", i)
         setXMLString(xmlFile, key .. "#type", weatherType)
-        setXMLFloat(xmlFile, key .. "#rate", multiplier)
+        setXMLFloat(xmlFile, key .. "#rate", rate)
         i = i + 1
     end
 
