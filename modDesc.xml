@@ -26,6 +26,14 @@ With ShelterMatters, sheds and storage buildings become a necessary investment, 
 - Savegame Integration: Configuration is saved per savegame, allowing different damage rates across various saves.
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
+
+Changelog v1.1.1.0
+
+- Added Indoor Area placeables under Buildings → Sheds for improved indoor detection
+
+Changelog v1.1.0.0
+
+- Added bale deterioration when left outside in the rain
         ]]></en>
         <de><![CDATA[
 ShelterMatters ist ein Mod für den Landwirtschafts-Simulator 22, der die Bedeutung von Schuppen und Innenräumen realistisch unterstreicht, indem er Mechanismen für die Abnutzung von Fahrzeugen und Werkzeugen sowie für den Verfall von Ballen einführt, die auf der Exposition gegenüber den Elementen basieren, um ein realistischeres Farmerlebnis zu ermöglichen.
@@ -48,6 +56,14 @@ Mit ShelterMatters werden Schuppen und Lagergebäude zu einer notwendigen Invest
 - Savegame-Integration: Die Konfiguration wird pro Savegame gespeichert, so dass unterschiedliche Schadensraten in verschiedenen Spielständen möglich sind.
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
+
+Changelog v1.1.1.0
+
+- Platzierbare Objekte für Innenbereiche unter Gebäude → Schuppen hinzugefügt, um die Erkennung von Innenräumen zu verbessern
+
+Changelog v1.1.0.0
+
+- Verschlechterung der Ballenqualität hinzugefügt, wenn sie im Regen draußen stehen gelassen werden
         ]]></de>
         <fr><![CDATA[
 ShelterMatters est un mod pour Farming Simulator 22 qui met l'accent sur l'importance des hangars et du stockage intérieur en introduisant des mécanismes d'usure des véhicules et des outils, ainsi que de détérioration des balles, en fonction de leur exposition aux éléments, pour une expérience agricole plus immersive.
@@ -70,6 +86,14 @@ Avec ShelterMatters, les hangars et les bâtiments de stockage deviennent un inv
 - Intégration des sauvegardes : La configuration est enregistrée pour chaque sauvegarde, ce qui permet d'appliquer des taux de dégâts différents selon les sauvegardes.
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
+
+Changelog v1.1.1.0
+
+- Ajout d'éléments de zone intérieure sous Bâtiments → Remises pour une meilleure détection intérieure
+
+Changelog v1.1.0.0
+
+- Ajout de la détérioration des balles lorsqu'elles sont laissées à l'extérieur sous la pluie
         ]]></fr>
     </description>
     <author>Depuits</author>
