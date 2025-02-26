@@ -78,8 +78,6 @@ function ShelterMatters:loadMap(name)
 
     ConstructionScreen.setBrush = Utils.appendedFunction(ConstructionScreen.setBrush, self.indoorAreasShow)
     ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, self.indoorAreasHide)
-
-    ShelterMattersBale.registerFunctions()
 end
 
 function ShelterMatters.loadSettingsFromServer()
