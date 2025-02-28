@@ -108,7 +108,7 @@ Changelog v1.1.0.0
         <sourcefile filename="src/shelterMatters.lua"/>
         <sourcefile filename="src/shelterMattersSyncEvent.lua"/>
         <sourcefile filename="src/shelterMattersBale.lua"/>
-        <sourcefile filename="src/shelterMattersBaleDamageEvent.lua"/>
+        <sourcefile filename="src/shelterMattersBaleDecayedEvent.lua"/>
     </extraSourceFiles>
 
     <placeableSpecializations>

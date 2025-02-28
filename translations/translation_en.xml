@@ -13,7 +13,7 @@
         <text name="SM_IndoorAreaRectangle10x50"        text="Indoor area rectangle 10x50"/>
         <text name="SM_IndoorAreaRectangle25x50"        text="Indoor area rectangle 25x50"/>
 
-        <text name="SM_AlertBaleDeleted"                text="Bale lost due to improper storage."/>
+        <text name="SM_AlertBaleDeleted"                text="Bale (%s) lost due to improper storage."/>
         <text name="SM_InfoBaleDecay"                   text="Decay"/>
     </texts>
 </l10n>
