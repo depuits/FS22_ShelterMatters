@@ -12,5 +12,8 @@
         <text name="SM_IndoorAreaRectangle10x25"        text="Innenbereich Rechteck 10x25"/>
         <text name="SM_IndoorAreaRectangle10x50"        text="Innenbereich Rechteck 10x50"/>
         <text name="SM_IndoorAreaRectangle25x50"        text="Innenbereich Rechteck 25x50"/>
+
+        <text name="SM_AlertBaleDeleted"                text="%s verloren wegen unsachgemäßer Lagerung."/>
+        <text name="SM_InfoBaleDecay"                   text="Verfall"/>
     </texts>
 </l10n>

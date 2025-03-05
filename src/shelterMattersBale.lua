@@ -52,7 +52,7 @@ function Bale:addDecayAmount(decayAmount)
         self:delete()
         shelterMattersBaleDecayedEvent.showDecayedNotification(self:getOwnerFarmId(), self:getFillType())
         -- send event to display popup on clients
-        g_server:broadcastEvent(shelterMattersBaleDecayedEvent.new(bale))
+        g_server:broadcastEvent(shelterMattersBaleDecayedEvent.new(self))
     end
 end
 

@@ -3,7 +3,7 @@ local shelterMattersBaleDecayedEvent_mt = Class(shelterMattersBaleDecayedEvent, 
 InitEventClass(shelterMattersBaleDecayedEvent, "shelterMattersBaleDecayedEvent")
 
 function shelterMattersBaleDecayedEvent.emptyNew()
-    return Event.new(shelterMattersBaleDamageEvent_mt)
+    return Event.new(shelterMattersBaleDecayedEvent_mt)
 end
 
 function shelterMattersBaleDecayedEvent.new(bale)
