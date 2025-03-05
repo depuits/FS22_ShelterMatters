@@ -27,6 +27,10 @@ With ShelterMatters, sheds and storage buildings become a necessary investment, 
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
 
+Changelog v1.1.2.0
+
+- Display of bale decay in infobox
+
 Changelog v1.1.1.0
 
 - Added Indoor Area placeables under Buildings → Sheds for improved indoor detection
@@ -56,6 +60,10 @@ Mit ShelterMatters werden Schuppen und Lagergebäude zu einer notwendigen Invest
 - Savegame-Integration: Die Konfiguration wird pro Savegame gespeichert, so dass unterschiedliche Schadensraten in verschiedenen Spielständen möglich sind.
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
+
+Changelog v1.1.2.0
+
+- Anzeige des Ballenverfalls in der Infobox
 
 Changelog v1.1.1.0
 
@@ -87,6 +95,10 @@ Avec ShelterMatters, les hangars et les bâtiments de stockage deviennent un inv
 
 https://github.com/depuits/FS22_ShelterMatters/releases/
 
+Changelog v1.1.2.0
+
+- Affichage de la décomposition des balles dans l'infobox
+
 Changelog v1.1.1.0
 
 - Ajout d'éléments de zone intérieure sous Bâtiments → Remises pour une meilleure détection intérieure
@@ -105,10 +117,10 @@ Changelog v1.1.0.0
     <l10n filenamePrefix="translations/translation"/>
 
     <extraSourceFiles>
-        <sourcefile filename="src/shelterMatters.lua"/>
-        <sourcefile filename="src/shelterMattersSyncEvent.lua"/>
-        <sourcefile filename="src/shelterMattersBale.lua"/>
-        <sourcefile filename="src/shelterMattersBaleDecayedEvent.lua"/>
+        <sourceFile filename="src/shelterMatters.lua"/>
+        <sourceFile filename="src/shelterMattersSyncEvent.lua"/>
+        <sourceFile filename="src/shelterMattersBale.lua"/>
+        <sourceFile filename="src/shelterMattersBaleDecayedEvent.lua"/>
     </extraSourceFiles>
 
     <placeableSpecializations>
