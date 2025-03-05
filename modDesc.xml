@@ -121,7 +121,12 @@ Changelog v1.1.0.0
         <sourceFile filename="src/shelterMattersSyncEvent.lua"/>
         <sourceFile filename="src/shelterMattersBale.lua"/>
         <sourceFile filename="src/shelterMattersBaleDecayedEvent.lua"/>
+        <sourceFile filename="src/injectSpecialization.lua"/>
     </extraSourceFiles>
+
+    <specializations>
+        <specialization name="mileageCounter" className="MileageCounter" filename="src/MileageCounter.lua"/>
+    </specializations>
 
     <placeableSpecializations>
         <specialization name="shelterMattersIndoorArea" className="ShelterMattersIndoorArea" filename="src/shelterMattersIndoorArea.lua"/>
