@@ -125,7 +125,7 @@ Changelog v1.1.0.0
     </extraSourceFiles>
 
     <specializations>
-        <specialization name="mileageCounter" className="MileageCounter" filename="src/MileageCounter.lua"/>
+        <specialization name="fillUnitDecay" className="FillUnitDecay" filename="src/fillUnitDecay.lua"/>
     </specializations>
 
     <placeableSpecializations>

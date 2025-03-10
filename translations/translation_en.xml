@@ -15,5 +15,11 @@
 
         <text name="SM_AlertBaleDeleted"                text="%s bale lost due to improper storage."/>
         <text name="SM_InfoBaleDecay"                   text="Decay"/>
+        <text name="SM_InfoBaleWetness"                 text="Wetness"/>
+        <text name="SM_InfoBaleWetness_1"               text="Dry"/>
+        <text name="SM_InfoBaleWetness_2"               text="Slightly Moist"/>
+        <text name="SM_InfoBaleWetness_3"               text="Damp"/>
+        <text name="SM_InfoBaleWetness_4"               text="Wet"/>
+        <text name="SM_InfoBaleWetness_5"               text="Soaking Wet"/>
     </texts>
 </l10n>

@@ -20,13 +20,16 @@ ShelterMatters.weatherMultipliers = {
     rain   = 5.0  -- severe increase in wear. constant moisture can cause rust and damage quickly.
 }
 
--- default values for bale weather deterioration rates per game hour
-ShelterMatters.baleWeatherDecay = {
-    default = 0,    -- No deterioration, fair weather.
-    fog     = 1000, -- Slow deterioration due to prolonged moisture.
-    snow    = 2000, -- Moderate deterioration, moisture exposure.
-    rain    = 3000  -- Heavy deterioration due to water damage.
+-- default values for bale wetness rates per game minute in weather conditions (expressed in %)
+ShelterMatters.baleWeatherWetness = {
+    default = 0.0,
+    fog     = 0.5,
+    snow    = 1.0,
+    rain    = 2.0
 }
+
+-- default deterioration value for a bale which is completly soaked (100% wetnes) per game hour
+ShelterMatters.baleWetnessDecay = 4000
 
 -- percentage of damage added to vehicle per game year
 ShelterMatters.damageRates = {
@@ -180,16 +183,22 @@ function ShelterMatters:update(dt)
     end
 
     -- Get the current in-game time in hours
-    local currentInGameTime = g_currentMission.environment.dayTime / (60 * 60 * 1000) -- ms to hours
+    local currentInGameHours = g_currentMission.environment.dayTime / (60 * 60 * 1000) -- ms to hours
+
+    local weather = self:getWeather()
+
+    -- Apply the damages to bales left outside 
+    local weatherWetness = self.baleWeatherWetness[weather] or self.baleWeatherWetness.default or 0
+    self:updateAllBalesDamage(currentInGameHours * 60, weatherWetness)
 
     -- Initialize the lastUpdateInGameTime if this is the first run
     if self.lastUpdateInGameTime == nil then
-        self.lastUpdateInGameTime = currentInGameTime
+        self.lastUpdateInGameTime = currentInGameHours
         return -- No update needed on the first run
     end
 
     -- Calculate the elapsed in-game hours
-    local elapsedInGameHours = currentInGameTime - self.lastUpdateInGameTime
+    local elapsedInGameHours = currentInGameHours - self.lastUpdateInGameTime
     if elapsedInGameHours < 0 then
         elapsedInGameHours = elapsedInGameHours + 24 -- Handle midnight rollover
     end
@@ -200,31 +209,22 @@ function ShelterMatters:update(dt)
     end
 
     -- Update last recorded in-game time
-    self.lastUpdateInGameTime = currentInGameTime
+    self.lastUpdateInGameTime = currentInGameHours
 
     -- Get effect of the current weather
-    local weather = self:getWeather()
     local weatherMultiplier = self.weatherMultipliers[weather] or 1
 
     -- Apply the damages to vehicles left outside
     for _, vehicle in pairs(g_currentMission.vehicles) do
         self:updateDamageAmount(vehicle, elapsedInGameHours, weatherMultiplier)
     end
-
-    -- Apply the damages to bales left outside
-    local weatherDecay = self.baleWeatherDecay[weather] or self.baleWeatherDecay.default or 0
-    self:updateAllBalesDamage(elapsedInGameHours, weatherDecay)
 end
 
-function ShelterMatters:updateAllBalesDamage(elapsedInGameHours, rate) 
-    if rate <= 0 then
-        return -- if no bale damage should apply
-    end
-
+function ShelterMatters:updateAllBalesDamage(currentTimeInGameMinutes, wetnessRate) 
     for _, saveItem in pairs(g_currentMission.itemSystem.itemsToSave) do
         -- Check if the object is a bale by checking its class name
         if saveItem.className == "Bale" then
-            ShelterMattersBale.updateBaleDamage(saveItem.item, elapsedInGameHours, rate)
+            ShelterMattersBale.updateBale(saveItem.item, currentTimeInGameMinutes, wetnessRate)
         end
     end
 end
@@ -235,7 +235,7 @@ function ShelterMatters:getVehicleDetailsString(vehicle)
 
     local inShed = ShelterMatters.isVehicleInShed(vehicle)
 
-    return ("Entity type: " .. (vehicle.typeName or "unknown") ..
+    return ("Entity type: " .. (typeName or "unknown") ..
         "\nEntity name: " .. vehicle:getFullName() ..
         "\ndmg: " .. tostring(vehicle:getDamageAmount()) ..
         "\nactive: " .. tostring(vehicle.isActive) ..
@@ -423,12 +423,14 @@ function ShelterMatters:saveConfig()
     end
 
     i = 0 -- reset i counter
-    for weatherType, rate in pairs(self.baleWeatherDecay) do
-        local key = string.format("ShelterMatters.baleWeatherDecay.rate(%d)", i)
+    for weatherType, rate in pairs(self.baleWeatherWetness) do
+        local key = string.format("ShelterMatters.baleWeatherWetness.rate(%d)", i)
         setXMLString(xmlFile, key .. "#type", weatherType)
         setXMLFloat(xmlFile, key .. "#rate", rate)
         i = i + 1
     end
+
+    setXMLFloat(xmlFile, "ShelterMatters.baleWeatherWetness#decay", self.baleWetnessDecay)
 
     saveXMLFile(xmlFile)
     delete(xmlFile)
@@ -487,7 +489,7 @@ function ShelterMatters:loadConfig()
 
     i = 0 -- reset i counter
     while true do
-        local key = string.format("ShelterMatters.baleWeatherDecay.rate(%d)", i)
+        local key = string.format("ShelterMatters.baleWeatherWetness.rate(%d)", i)
         local weatherType = getXMLString(xmlFile, key .. "#type")
         if not weatherType then
             break
@@ -495,11 +497,14 @@ function ShelterMatters:loadConfig()
 
         local rate = getXMLFloat(xmlFile, key .. "#rate")
         if rate then
-            self.baleWeatherDecay[weatherType] = rate
+            self.baleWeatherWetness[weatherType] = rate
         end
+
 
         i = i + 1
     end
+
+    self.baleWetnessDecay = Utils.getNoNil(getXMLFloat(xmlFile, "ShelterMatters.baleWeatherWetness#decay"), self.baleWetnessDecay)
 
     delete(xmlFile)
     ShelterMatters.log("Configuration loaded from: " .. configFile)
@@ -551,8 +556,8 @@ function ShelterMatters:smSetWeatherMultiplier(weatherType, newMultiplier)
     ShelterMattersSyncEvent.sendToClients()
 end
 
-addConsoleCommand("smSetBaleWeatherDecay", "Updates the bale weather decay rate associated with a specific weather type", "smSetBaleWeatherDecay", ShelterMatters)
-function ShelterMatters:smSetBaleWeatherDecay(weatherType, newRate)
+addConsoleCommand("smSetBaleWeatherWetness", "Updates the bale weather wetness rate associated with a specific weather type", "smSetBaleWeatherWetness", ShelterMatters)
+function ShelterMatters:smSetBaleWeatherWetness(weatherType, newRate)
     if not g_currentMission:getIsServer() then
         print("Changes can only be done on the server.")
         return
@@ -566,8 +571,29 @@ function ShelterMatters:smSetBaleWeatherDecay(weatherType, newRate)
     end
 
     -- Update the rate
-    self.baleWeatherDecay[weatherType] = newRate
+    self.baleWeatherWetness[weatherType] = newRate
     print(string.format("Updated bale weather decay for '%s' to %.2f L/h", weatherType, newRate))
+
+    ShelterMattersSyncEvent.sendToClients()
+end
+
+addConsoleCommand("smSetBaleWetnessDecay", "Set decay of bale wetness", "smSetBaleWetnessDecay", ShelterMatters)
+function ShelterMatters:smSetBaleWetnessDecay(newRate)
+    if not g_currentMission:getIsServer() then
+        print("Changes can only be done on the server.")
+        return
+    end
+
+    -- Validate the input
+    newRate = tonumber(newRate)
+    if not newRate or newRate < 0 then
+        print("Invalid multiplier. Must be a positive number.")
+        return
+    end
+
+    -- Update the rate
+    self.baleWeatherWetness = newRate
+    print(string.format("%.2f L/h*wetness", self.baleWeatherWetness))
 
     ShelterMattersSyncEvent.sendToClients()
 end
@@ -630,13 +656,18 @@ function ShelterMatters:smListWeatherMultipliers()
     print("=== End of List ===")
 end
 
-addConsoleCommand("smListBaleWeatherDecay", "Lists the bale decay values by weather, showing how different weather conditions impact bales left outside", "smListBaleWeatherDecay", ShelterMatters)
-function ShelterMatters:smListBaleWeatherDecay()
+addConsoleCommand("smListbaleWeatherWetness", "Lists the bale wetness rates by weather, showing how different weather conditions impact bales left outside", "smListbaleWeatherWetness", ShelterMatters)
+function ShelterMatters:smListbaleWeatherWetness()
     print("=== Current Bale Decay by Weather ===")
-    for weatherType, rate in pairs(self.baleWeatherDecay) do
-        print(string.format("Weather: %s, Rate: %.2f L/h", weatherType, rate))
+    for weatherType, rate in pairs(self.baleWeatherWetness) do
+        print(string.format("Weather: %s, Rate: %.2f %%/m", weatherType, rate))
     end
     print("=== End of List ===")
+end
+
+addConsoleCommand("smGetbaleWetnessDecay", "Get decay of bale wetness", "smGetbaleWetnessDecay", ShelterMatters)
+function ShelterMatters:smGetbaleWetnessDecay()
+    print(string.format("%.2f L/h*wetness", self.baleWeatherWetness))
 end
 
 addConsoleCommand("smToggleShelterStatusIcon", "Toggles the shelter status icon visibility", "smToggleShelterStatusIcon", ShelterMatters)

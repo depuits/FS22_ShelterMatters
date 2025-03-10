@@ -4,8 +4,8 @@ TypeManager.finalizeTypes = Utils.prependedFunction(TypeManager.finalizeTypes, f
 	if self.typeName == "vehicle" then
 		for typeName, typeEntry in pairs(self:getTypes()) do
 			for name, _ in pairs(typeEntry.specializationsByName) do
-				if name == "motorized" then
-					self:addSpecialization(typeName, modName..".mileageCounter")
+				if name == "fillUnit" then
+					self:addSpecialization(typeName, modName..".fillUnitDecay")
 					break
 					end
 				end
