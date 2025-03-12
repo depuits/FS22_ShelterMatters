@@ -20,23 +20,6 @@ ShelterMatters.weatherMultipliers = {
     rain   = 5.0  -- severe increase in wear. constant moisture can cause rust and damage quickly.
 }
 
--- default values for bale wetness rates per game minute in weather conditions (expressed in %/min)
-ShelterMatters.baleWeatherWetness = {
-    default = 0.0,
-    fog     = 0.5,
-    snow    = 1.0,
-    rain    = 2.0
-}
--- default deterioration value for a bale which is completly soaked (100% wetnes) liters/month
-ShelterMatters.baleWetnessDecay = 4000
-
---TODO sync and implement
---TODO change to values per type (hay, straw, silage, gras)
--- default period in which the product is at its best. After this it will start decaying. Value in months
-ShelterMatters.baleBestBeforePeriod = 12
--- default deterioration value for a bale which is past its best by date in liters/month
-ShelterMatters.baleBestBeforeDecay = 1000
-
 -- percentage of damage added to vehicle per game year
 ShelterMatters.damageRates = {
     default = 10,   -- 10% damage per in-game year when left outside. 
@@ -61,6 +44,19 @@ ShelterMatters.damageRates = {
     transport = 5,           -- 5% damage per in-game year. Transport vehicles experience minimal wear outdoors.
     trailer = 5,             -- 5% damage per in-game year. Trailers experience minimal wear outdoors.
     balerWrapper = 10,       -- 10% damage per in-game year. Bale wrappers experience moderate wear from exposure to weather.
+}
+
+-- default values for wetness rates per game minute in weather conditions (expressed in %/min)
+ShelterMatters.weatherWetnessRates = {
+    default = 0.0,
+    fog     = 0.5,
+    snow    = 1.0,
+    rain    = 2.0
+}
+
+-- save and loaded but not synced (TODO when implementing UI or commands)
+ShelterMatters.decayProperties = {
+    -- filled in on load
 }
 
 addModEventListener(ShelterMatters)
@@ -194,7 +190,7 @@ function ShelterMatters:update(dt)
     local weather = self:getWeather()
 
     -- Apply the damages to bales left outside 
-    local weatherWetness = self.baleWeatherWetness[weather] or self.baleWeatherWetness.default or 0
+    local weatherWetness = self.weatherWetnessRates[weather] or self.weatherWetnessRates.default or 0
     self:updateAllBalesDamage(weatherWetness)
 
     -- Initialize the lastUpdateInGameTime if this is the first run
@@ -429,14 +425,24 @@ function ShelterMatters:saveConfig()
     end
 
     i = 0 -- reset i counter
-    for weatherType, rate in pairs(self.baleWeatherWetness) do
-        local key = string.format("ShelterMatters.baleWeatherWetness.rate(%d)", i)
+    for weatherType, rate in pairs(self.weatherWetnessRates) do
+        local key = string.format("ShelterMatters.weatherWetnessRates.rate(%d)", i)
         setXMLString(xmlFile, key .. "#type", weatherType)
         setXMLFloat(xmlFile, key .. "#rate", rate)
         i = i + 1
     end
 
-    setXMLFloat(xmlFile, "ShelterMatters.baleWeatherWetness#decay", self.baleWetnessDecay)
+    i = 0 -- reset i counter
+    for fillType, props in pairs(self.decayProperties) do
+        local key = string.format("ShelterMatters.decayProperties.property(%d)", i)
+        local fillTypeName = Utils.getNoNil(g_fillTypeManager:getFillTypeNameByIndex(self:getFillType()), "unknown")
+        setXMLString(xmlFile, key .. "#type", fillTypeName)
+        setXMLFloat(xmlFile, key .. "#wetnessImpact", props.wetnessImpact)
+        setXMLFloat(xmlFile, key .. "#wetnessDecay", props.wetnessDecay)
+        setXMLInt(xmlFile, key .. "#bestBeforePeriod", props.bestBeforePeriod)
+        setXMLFloat(xmlFile, key .. "#bestBeforeDecay", props.bestBeforeDecay)
+        i = i + 1
+    end
 
     saveXMLFile(xmlFile)
     delete(xmlFile)
@@ -445,6 +451,39 @@ function ShelterMatters:saveConfig()
 end
 
 function ShelterMatters:loadConfig()
+    -- initialize default decay properties
+    self.decayProperties = {
+        [g_fillTypeManager:getFillTypeIndexByName("DRYGRASS_WINDROW")] = {
+            wetnessImpact = 1.5,  -- **Hay absorbs rain quickly** due to being dried
+            wetnessDecay = 4000,  -- Moderate decay when fully wet (liters/month)
+            bestBeforePeriod = 8,  -- **Shelf life before decay starts (months)**
+            bestBeforeDecay = 2000 -- Decays faster after best-before period (liters/month)
+        },
+
+        [g_fillTypeManager:getFillTypeIndexByName("SILAGE")] = {
+            wetnessImpact = 0.6,  -- **Unwrapped silage absorbs rain slowly**
+            wetnessDecay = 2000,  -- **Decays when soaked**, but slower than straw/grass
+            bestBeforePeriod = 12, -- **Longer shelf life (months)**
+            bestBeforeDecay = 1000 -- Gradual decay after best-before period
+        },
+
+        [g_fillTypeManager:getFillTypeIndexByName("STRAW")] = {
+            wetnessImpact = 1.2,  -- **Straw absorbs rain quickly**, but not as fast as hay
+            wetnessDecay = 5000,  -- **Severe decay when fully wet**
+            bestBeforePeriod = 18, -- **Extended shelf life (months)**
+            bestBeforeDecay = 1000 -- Slower decay after best-before period
+        },
+
+        [g_fillTypeManager:getFillTypeIndexByName("GRASS")] = {
+            wetnessImpact = 0.8,  -- **Fresh grass has moisture**, absorbs rain more slowly
+            wetnessDecay = 6000,  -- **Decays the fastest when wet**
+            bestBeforePeriod = 3,  -- **Short shelf life (months)**
+            bestBeforeDecay = 3000 -- Heavy decay after best-before period
+        }
+
+        --TODO expand
+    }
+
     local configFile = self:getSavegameConfigPath()
     if not configFile then
         Logging.warning("[shelterMatters] Unable to save config: Savegame directory not found.")
@@ -495,7 +534,7 @@ function ShelterMatters:loadConfig()
 
     i = 0 -- reset i counter
     while true do
-        local key = string.format("ShelterMatters.baleWeatherWetness.rate(%d)", i)
+        local key = string.format("ShelterMatters.weatherWetnessRates.rate(%d)", i)
         local weatherType = getXMLString(xmlFile, key .. "#type")
         if not weatherType then
             break
@@ -503,14 +542,38 @@ function ShelterMatters:loadConfig()
 
         local rate = getXMLFloat(xmlFile, key .. "#rate")
         if rate then
-            self.baleWeatherWetness[weatherType] = rate
+            self.weatherWetnessRates[weatherType] = rate
         end
 
 
         i = i + 1
     end
 
-    self.baleWetnessDecay = Utils.getNoNil(getXMLFloat(xmlFile, "ShelterMatters.baleWeatherWetness#decay"), self.baleWetnessDecay)
+    i = 0 -- reset i counter
+    while true do
+        local key = string.format("ShelterMatters.decayProperties.property(%d)", i)
+        local fillTypeName = getXMLString(xmlFile, key .. "#type")
+        if not fillTypeName then
+            break
+        end
+
+        local fillType = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+
+        local wetnessImpact = getXMLFloat(xmlFile, key .. "#wetnessImpact")
+        local wetnessDecay = getXMLFloat(xmlFile, key .. "#wetnessDecay")
+        local bestBeforePeriod = getXMLInt(xmlFile, key .. "#bestBeforePeriod")
+        local bestBeforeDecay = getXMLFloat(xmlFile, key .. "#bestBeforeDecay")
+
+        self.decayProperties[fillType] = {
+            wetnessImpact = wetnessImpact,
+            wetnessDecay = wetnessDecay,
+            bestBeforePeriod = bestBeforePeriod,
+            bestBeforePeriod = bestBeforePeriod,
+        }
+
+        i = i + 1
+    end
+
 
     delete(xmlFile)
     ShelterMatters.log("Configuration loaded from: " .. configFile)
@@ -562,8 +625,8 @@ function ShelterMatters:smSetWeatherMultiplier(weatherType, newMultiplier)
     ShelterMattersSyncEvent.sendToClients()
 end
 
-addConsoleCommand("smSetBaleWeatherWetness", "Updates the bale weather wetness rate associated with a specific weather type", "smSetBaleWeatherWetness", ShelterMatters)
-function ShelterMatters:smSetBaleWeatherWetness(weatherType, newRate)
+addConsoleCommand("smSetWeatherWetnessRates", "Updates the weather wetness rate associated with a specific weather type", "smSetWeatherWetnessRates", ShelterMatters)
+function ShelterMatters:smSetWeatherWetnessRates(weatherType, newRate)
     if not g_currentMission:getIsServer() then
         print("Changes can only be done on the server.")
         return
@@ -571,35 +634,14 @@ function ShelterMatters:smSetBaleWeatherWetness(weatherType, newRate)
 
     -- Validate the input
     newRate = tonumber(newRate)
-    if not newRate or newRate < 0 then
-        print("Invalid multiplier. Must be a positive number.")
+    if not newRate then
+        print("Invalid multiplier.")
         return
     end
 
     -- Update the rate
-    self.baleWeatherWetness[weatherType] = newRate
-    print(string.format("Updated bale weather decay for '%s' to %.2f L/h", weatherType, newRate))
-
-    ShelterMattersSyncEvent.sendToClients()
-end
-
-addConsoleCommand("smSetBaleWetnessDecay", "Set decay of bale wetness", "smSetBaleWetnessDecay", ShelterMatters)
-function ShelterMatters:smSetBaleWetnessDecay(newRate)
-    if not g_currentMission:getIsServer() then
-        print("Changes can only be done on the server.")
-        return
-    end
-
-    -- Validate the input
-    newRate = tonumber(newRate)
-    if not newRate or newRate < 0 then
-        print("Invalid multiplier. Must be a positive number.")
-        return
-    end
-
-    -- Update the rate
-    self.baleWeatherWetness = newRate
-    print(string.format("%.2f L/month*wetness", self.baleWeatherWetness))
+    self.weatherWetnessRates[weatherType] = newRate
+    print(string.format("Updated weather wetness rate for '%s' to %.2f %%/minute", weatherType, newRate))
 
     ShelterMattersSyncEvent.sendToClients()
 end
@@ -662,18 +704,13 @@ function ShelterMatters:smListWeatherMultipliers()
     print("=== End of List ===")
 end
 
-addConsoleCommand("smListbaleWeatherWetness", "Lists the bale wetness rates by weather, showing how different weather conditions impact bales left outside", "smListbaleWeatherWetness", ShelterMatters)
-function ShelterMatters:smListbaleWeatherWetness()
+addConsoleCommand("smListWeatherWetnessRates", "Lists the wetness rates by weather, showing how different weather conditions impact products left outside", "smListWeatherWetnessRates", ShelterMatters)
+function ShelterMatters:smListWeatherWetnessRates()
     print("=== Current Bale Decay by Weather ===")
-    for weatherType, rate in pairs(self.baleWeatherWetness) do
-        print(string.format("Weather: %s, Rate: %.2f %%/m", weatherType, rate))
+    for weatherType, rate in pairs(self.weatherWetnessRates) do
+        print(string.format("Weather: %s, Rate: %.2f %%/minute", weatherType, rate))
     end
     print("=== End of List ===")
-end
-
-addConsoleCommand("smGetbaleWetnessDecay", "Get decay of bale wetness", "smGetbaleWetnessDecay", ShelterMatters)
-function ShelterMatters:smGetbaleWetnessDecay()
-    print(string.format("%.2f L/month*wetness", self.baleWeatherWetness))
 end
 
 addConsoleCommand("smToggleShelterStatusIcon", "Toggles the shelter status icon visibility", "smToggleShelterStatusIcon", ShelterMatters)

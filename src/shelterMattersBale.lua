@@ -61,18 +61,26 @@ function Bale:getBestBefore()
         return self.bestBefore
     end
 
-    --TODO if type baleBestBeforePeriod or baleBestBeforeDecay not defined then return nil
+    local decayProps = self:getDecayProperties()
+    
+    -- if type bestBeforePeriod or bestBeforeDecay not defined then return nil
+    if decayProps and 
+        decayProps.bestBeforePeriod and decayProps.bestBeforePeriod > 0 and 
+        decayProps.bestBeforeDecay and decayProps.bestBeforeDecay > 0 
+    then
+        local month = g_currentMission.environment.currentPeriod + decayProps.bestBeforePeriod -- 1 (Jan) to 12 (Dec)
+        local year = g_currentMission.environment.currentYear
 
-    local month = g_currentMission.environment.currentPeriod + ShelterMatters.baleBestBeforePeriod -- 1 (Jan) to 12 (Dec)
-    local year = g_currentMission.environment.currentYear
-
-    -- Handle month rollover
-    if month > 12 then
-        year = year + math.floor((month - 1) / 12)  -- Increase the year
-        month = ((month - 1) % 12) + 1  -- Wrap month to stay within 1-12
+        -- Handle month rollover
+        if month > 12 then
+            year = year + math.floor((month - 1) / 12)  -- Increase the year
+            month = ((month - 1) % 12) + 1  -- Wrap month to stay within 1-12
     end
+end
 
     self:setBestBefore({ month = month, year = year })
+
+    return self.bestBefore
 end
 
 function Bale:setBestBefore(bestBefore)
@@ -113,6 +121,19 @@ function Bale:setDecayAmount(decayAmount)
     end
 end
 
+function Bale:getDecayProperties()
+    return ShelterMatters.decayProperties[self:getFillType()]
+end
+
+function Bale:isAffectedByWetness()
+    -- only things with a decay rate are affected by wetness
+    local decayProps = self:getDecayProperties()
+
+    return decayProps and -- should have decay properties defined
+        decayProps.wetnessImpact and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
+        decayProps.wetnessDecay and decayProps.wetnessDecay > 0 -- and there must also be a decay from the wetness
+end
+
 -- update bale to the currentTime and with which rate wetness is applied
 function ShelterMattersBale.updateBale(bale, wetnessRate)
     if not g_currentMission:getIsServer() then
@@ -143,23 +164,27 @@ function ShelterMattersBale.updateBale(bale, wetnessRate)
     -- Store the last update time
     bale.lastUpdate = { day = currentDay, time = currentTime }
 
-    -- update wetness
-    if
-        wetnessRate > 0 and -- only if there is a wetnessRate
-        bale.wrappingState ~= 1 and -- wrapped bales don't get wet
-        bale.wetness < 1 -- bale is not yet soaked
-    then
-        local inShed = ShelterMatters.isNodeInShed(bale.nodeId)
-        if not inShed then
-            bale:setWetness(bale.wetness + (wetnessRate * elapsedInMinutes))
-        end
-    end
+    local decayProps = bale:getDecayProperties()
 
-    -- update decay by wetness
-    if bale.wetness > 0 then -- only if the bale is wet then it will decay
-        local decayPerMinute = ShelterMatters.baleWetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
-        local wetnessDamage = (decayPerMinute * elapsedInMinutes) * bale.wetness
-        bale:addDecayAmount(wetnessDamage)
+    if bale:isAffectedByWetness() then -- we will not check wetness if the is no decay for it
+        -- update wetness
+        if
+            wetnessRate > 0 and -- only if there is a wetnessRate
+            bale.wrappingState ~= 1 and -- wrapped bales don't get wet
+            bale.wetness < 1 -- bale is not yet soaked
+        then
+            local inShed = ShelterMatters.isNodeInShed(bale.nodeId)
+            if not inShed then
+                bale:setWetness(bale.wetness + (wetnessRate * decayProps.wetnessImpact * elapsedInMinutes))
+            end
+        end
+
+        -- update decay by wetness
+        if bale.wetness > 0 then -- only if the bale is wet then it will decay
+            local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
+            local wetnessDamage = (decayPerMinute * elapsedInMinutes) * bale.wetness
+            bale:addDecayAmount(wetnessDamage)
+        end
     end
 
     -- update bestBefore
@@ -174,7 +199,7 @@ function ShelterMattersBale.updateBale(bale, wetnessRate)
  
         -- calculate decay scaled to the minute timeframe given the decay in liters/month
         -- => value / minutes / hours / days
-        local decayScaled = ShelterMatters.baleBestBeforeDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
+        local decayScaled = decayProps.bestBeforeDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
         local decayDamage = elapsedDecayInMinutes * decayScaled
         bale:addDecayAmount(decayDamage)
     end
@@ -258,17 +283,19 @@ function ShelterMattersBale:showInfo(box)
     end
 
     -- display wetness in info box
-    local wetnessDesc = "SM_InfoBaleWetness_1"
-    if self.wetness > 80 then
-        wetnessDesc = "SM_InfoBaleWetness_5"
-    elseif self.wetness > 60 then
-        wetnessDesc = "SM_InfoBaleWetness_4"
-    elseif self.wetness > 30 then
-        wetnessDesc = "SM_InfoBaleWetness_3"
-    elseif self.wetness > 0 then
-        wetnessDesc = "SM_InfoBaleWetness_2"
+    if self:isAffectedByWetness() then
+        local wetnessDesc = "SM_InfoBaleWetness_1"
+        if self.wetness > 80 then
+            wetnessDesc = "SM_InfoBaleWetness_5"
+        elseif self.wetness > 60 then
+            wetnessDesc = "SM_InfoBaleWetness_4"
+        elseif self.wetness > 30 then
+            wetnessDesc = "SM_InfoBaleWetness_3"
+        elseif self.wetness > 0 then
+            wetnessDesc = "SM_InfoBaleWetness_2"
+        end
+        box:addLine(g_i18n:getText("SM_InfoBaleWetness"), g_i18n:getText(wetnessDesc))
     end
-    box:addLine(g_i18n:getText("SM_InfoBaleWetness"), g_i18n:getText(wetnessDesc))
 
     -- display decay in info box
     local decayPercentage = 0
@@ -276,7 +303,9 @@ function ShelterMattersBale:showInfo(box)
         decayPercentage = self.decayAmount / self.fillLevelFull
     end
 
-    box:addLine(g_i18n:getText("SM_InfoBaleDecay"), string.format("%d%%", decayPercentage * 100))
+    if decayPercentage > 0 then
+        box:addLine(g_i18n:getText("SM_InfoBaleDecay"), string.format("%d%%", decayPercentage * 100))
+    end
 end
 
 function ShelterMattersBale.registerSavegameXMLPaths(schema, basePath)
@@ -326,8 +355,10 @@ function ShelterMattersBale.saveBaleAttributesToXMLFile(attributes, xmlFile, key
     xmlFile:setValue(key .. ".lastUpdate#day", attributes.lastUpdate.day)
     xmlFile:setValue(key .. ".lastUpdate#time", attributes.lastUpdate.time)
 
-    xmlFile:setValue(key .. ".bestBefore#month", attributes.bestBefore.month)
-    xmlFile:setValue(key .. ".bestBefore#year", attributes.bestBefore.year)
+    if attributes.bestBefore then
+        xmlFile:setValue(key .. ".bestBefore#month", attributes.bestBefore.month)
+        xmlFile:setValue(key .. ".bestBefore#year", attributes.bestBefore.year)
+    end
 
     xmlFile:setValue(key .. "#wetness", attributes.wetness)
     xmlFile:setValue(key .. "#decayAmount", attributes.decayAmount)
@@ -338,8 +369,10 @@ function ShelterMattersBale:saveToXMLFile(xmlFile, key)
     xmlFile:setValue(key .. ".lastUpdate#day", self.lastUpdate.day)
     xmlFile:setValue(key .. ".lastUpdate#time", self.lastUpdate.time)
 
-    xmlFile:setValue(key .. ".bestBefore#month", self.bestBefore.month)
-    xmlFile:setValue(key .. ".bestBefore#year", self.bestBefore.year)
+    if self.bestBefore then
+        xmlFile:setValue(key .. ".bestBefore#month", self.bestBefore.month)
+        xmlFile:setValue(key .. ".bestBefore#year", self.bestBefore.year)
+    end
 
     xmlFile:setValue(key .. "#wetness", self.wetness)
     xmlFile:setValue(key .. "#decayAmount", self.decayAmount)
