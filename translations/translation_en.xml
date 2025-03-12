@@ -14,6 +14,8 @@
         <text name="SM_IndoorAreaRectangle25x50"        text="Indoor area rectangle 25x50"/>
 
         <text name="SM_AlertBaleDeleted"                text="%s bale lost due to improper storage."/>
+        <text name="SM_InfoBestBefore"                  text="Best before"/>
+        <text name="SM_InfoExpired"                     text="Expired"/>
         <text name="SM_InfoBaleDecay"                   text="Decay"/>
         <text name="SM_InfoBaleWetness"                 text="Wetness"/>
         <text name="SM_InfoBaleWetness_1"               text="Dry"/>

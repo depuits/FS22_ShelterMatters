@@ -20,16 +20,22 @@ ShelterMatters.weatherMultipliers = {
     rain   = 5.0  -- severe increase in wear. constant moisture can cause rust and damage quickly.
 }
 
--- default values for bale wetness rates per game minute in weather conditions (expressed in %)
+-- default values for bale wetness rates per game minute in weather conditions (expressed in %/min)
 ShelterMatters.baleWeatherWetness = {
     default = 0.0,
     fog     = 0.5,
     snow    = 1.0,
     rain    = 2.0
 }
-
--- default deterioration value for a bale which is completly soaked (100% wetnes) per game hour
+-- default deterioration value for a bale which is completly soaked (100% wetnes) liters/month
 ShelterMatters.baleWetnessDecay = 4000
+
+--TODO sync and implement
+--TODO change to values per type (hay, straw, silage, gras)
+-- default period in which the product is at its best. After this it will start decaying. Value in months
+ShelterMatters.baleBestBeforePeriod = 12
+-- default deterioration value for a bale which is past its best by date in liters/month
+ShelterMatters.baleBestBeforeDecay = 1000
 
 -- percentage of damage added to vehicle per game year
 ShelterMatters.damageRates = {
@@ -189,7 +195,7 @@ function ShelterMatters:update(dt)
 
     -- Apply the damages to bales left outside 
     local weatherWetness = self.baleWeatherWetness[weather] or self.baleWeatherWetness.default or 0
-    self:updateAllBalesDamage(currentInGameHours * 60, weatherWetness)
+    self:updateAllBalesDamage(weatherWetness)
 
     -- Initialize the lastUpdateInGameTime if this is the first run
     if self.lastUpdateInGameTime == nil then
@@ -220,11 +226,11 @@ function ShelterMatters:update(dt)
     end
 end
 
-function ShelterMatters:updateAllBalesDamage(currentTimeInGameMinutes, wetnessRate) 
+function ShelterMatters:updateAllBalesDamage(wetnessRate) 
     for _, saveItem in pairs(g_currentMission.itemSystem.itemsToSave) do
         -- Check if the object is a bale by checking its class name
         if saveItem.className == "Bale" then
-            ShelterMattersBale.updateBale(saveItem.item, currentTimeInGameMinutes, wetnessRate)
+            ShelterMattersBale.updateBale(saveItem.item, wetnessRate)
         end
     end
 end
@@ -593,7 +599,7 @@ function ShelterMatters:smSetBaleWetnessDecay(newRate)
 
     -- Update the rate
     self.baleWeatherWetness = newRate
-    print(string.format("%.2f L/h*wetness", self.baleWeatherWetness))
+    print(string.format("%.2f L/month*wetness", self.baleWeatherWetness))
 
     ShelterMattersSyncEvent.sendToClients()
 end
@@ -667,7 +673,7 @@ end
 
 addConsoleCommand("smGetbaleWetnessDecay", "Get decay of bale wetness", "smGetbaleWetnessDecay", ShelterMatters)
 function ShelterMatters:smGetbaleWetnessDecay()
-    print(string.format("%.2f L/h*wetness", self.baleWeatherWetness))
+    print(string.format("%.2f L/month*wetness", self.baleWeatherWetness))
 end
 
 addConsoleCommand("smToggleShelterStatusIcon", "Toggles the shelter status icon visibility", "smToggleShelterStatusIcon", ShelterMatters)
