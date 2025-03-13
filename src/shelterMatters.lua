@@ -435,12 +435,12 @@ function ShelterMatters:saveConfig()
     i = 0 -- reset i counter
     for fillType, props in pairs(self.decayProperties) do
         local key = string.format("ShelterMatters.decayProperties.property(%d)", i)
-        local fillTypeName = Utils.getNoNil(g_fillTypeManager:getFillTypeNameByIndex(self:getFillType()), "unknown")
+        local fillTypeName = Utils.getNoNil(g_fillTypeManager:getFillTypeNameByIndex(fillType), "unknown")
         setXMLString(xmlFile, key .. "#type", fillTypeName)
-        setXMLFloat(xmlFile, key .. "#wetnessImpact", props.wetnessImpact)
-        setXMLFloat(xmlFile, key .. "#wetnessDecay", props.wetnessDecay)
-        setXMLInt(xmlFile, key .. "#bestBeforePeriod", props.bestBeforePeriod)
-        setXMLFloat(xmlFile, key .. "#bestBeforeDecay", props.bestBeforeDecay)
+        if props.wetnessImpact then setXMLFloat(xmlFile, key .. "#wetnessImpact", props.wetnessImpact) end
+        if props.wetnessDecay then setXMLFloat(xmlFile, key .. "#wetnessDecay", props.wetnessDecay) end
+        if props.bestBeforePeriod then setXMLInt(xmlFile, key .. "#bestBeforePeriod", props.bestBeforePeriod) end
+        if props.bestBeforeDecay then setXMLFloat(xmlFile, key .. "#bestBeforeDecay", props.bestBeforeDecay) end
         i = i + 1
     end
 
@@ -456,21 +456,21 @@ function ShelterMatters:loadConfig()
         [g_fillTypeManager:getFillTypeIndexByName("DRYGRASS_WINDROW")] = {
             wetnessImpact = 1.5,  -- **Hay absorbs rain quickly** due to being dried
             wetnessDecay = 4000,  -- Moderate decay when fully wet (liters/month)
-            bestBeforePeriod = 8,  -- **Shelf life before decay starts (months)**
+            bestBeforePeriod = 12,  -- **Shelf life before decay starts (months)**
             bestBeforeDecay = 2000 -- Decays faster after best-before period (liters/month)
         },
 
         [g_fillTypeManager:getFillTypeIndexByName("SILAGE")] = {
             wetnessImpact = 0.6,  -- **Unwrapped silage absorbs rain slowly**
             wetnessDecay = 2000,  -- **Decays when soaked**, but slower than straw/grass
-            bestBeforePeriod = 12, -- **Longer shelf life (months)**
+            bestBeforePeriod = 18, -- **Longer shelf life (months)**
             bestBeforeDecay = 1000 -- Gradual decay after best-before period
         },
 
         [g_fillTypeManager:getFillTypeIndexByName("STRAW")] = {
             wetnessImpact = 1.2,  -- **Straw absorbs rain quickly**, but not as fast as hay
             wetnessDecay = 5000,  -- **Severe decay when fully wet**
-            bestBeforePeriod = 18, -- **Extended shelf life (months)**
+            bestBeforePeriod = 26, -- **Extended shelf life (months)**
             bestBeforeDecay = 1000 -- Slower decay after best-before period
         },
 
@@ -568,7 +568,7 @@ function ShelterMatters:loadConfig()
             wetnessImpact = wetnessImpact,
             wetnessDecay = wetnessDecay,
             bestBeforePeriod = bestBeforePeriod,
-            bestBeforePeriod = bestBeforePeriod,
+            bestBeforeDecay = bestBeforeDecay,
         }
 
         i = i + 1

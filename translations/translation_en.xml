@@ -15,6 +15,8 @@
 
         <text name="SM_AlertBaleDeleted"                text="%s bale lost due to improper storage."/>
         <text name="SM_InfoBestBefore"                  text="Best before"/>
+        <text name="SM_InfoBestBeforeNextYear"          text="%s next year"/>
+        <text name="SM_InfoBestBeforeInYears"           text="%s in %d years"/>
         <text name="SM_InfoExpired"                     text="Expired"/>
         <text name="SM_InfoBaleDecay"                   text="Decay"/>
         <text name="SM_InfoBaleWetness"                 text="Wetness"/>

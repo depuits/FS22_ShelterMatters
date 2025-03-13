@@ -68,17 +68,17 @@ function Bale:getBestBefore()
         decayProps.bestBeforePeriod and decayProps.bestBeforePeriod > 0 and 
         decayProps.bestBeforeDecay and decayProps.bestBeforeDecay > 0 
     then
-        local month = g_currentMission.environment.currentPeriod + decayProps.bestBeforePeriod -- 1 (Jan) to 12 (Dec)
+        local month = g_currentMission.environment.currentPeriod + decayProps.bestBeforePeriod -- 1 (March) to 12 (Feb)
         local year = g_currentMission.environment.currentYear
 
         -- Handle month rollover
         if month > 12 then
             year = year + math.floor((month - 1) / 12)  -- Increase the year
             month = ((month - 1) % 12) + 1  -- Wrap month to stay within 1-12
+        end
+        
+        self:setBestBefore({ month = month, year = year })
     end
-end
-
-    self:setBestBefore({ month = month, year = year })
 
     return self.bestBefore
 end
@@ -87,7 +87,7 @@ function Bale:setBestBefore(bestBefore)
     self.bestBefore = bestBefore
 
     -- if the bestbefore is not valid then we clear it
-    if bestBefore.month == nil or bestBefore.year == nil then
+    if not bestBefore or bestBefore.month == nil or bestBefore.year == nil then
         self.bestBefore = nil
     end
 
@@ -189,12 +189,12 @@ function ShelterMattersBale.updateBale(bale, wetnessRate)
 
     -- update bestBefore
     local bb = bale:getBestBefore()
-    if bb and bb.month > g_currentMission.environment.currentPeriod and bb.year > g_currentMission.environment.currentYear then
+    if bb and bb.month < g_currentMission.environment.currentPeriod and bb.year <= g_currentMission.environment.currentYear then
         local elapsedDecayInMinutes = elapsedInMinutes -- decay from lastupdate
         -- unless the last update is from before the best before date
-        if isLastUpdateBefore(elapsedInMinutes, bb.month, bb.year) then
+        if ShelterMattersHelpers.isLastUpdateBefore(elapsedInMinutes, bb.month, bb.year) then
             -- if it is from before then only decay from the bestbefore date
-            elapsedDecayInMinutes = getElapsedMinutesSince(bb.month, bb.year)
+            elapsedDecayInMinutes = ShelterMattersHelpers.getElapsedMinutesSince(bb.month, bb.year)
         end
  
         -- calculate decay scaled to the minute timeframe given the decay in liters/month
@@ -205,77 +205,31 @@ function ShelterMattersBale.updateBale(bale, wetnessRate)
     end
 end
 
-local function isLastUpdateBefore(elapsedInMinutes, targetMonth, targetYear)
-    -- Get the current in-game date
-    local currentYear = g_currentMission.environment.currentYear
-    local currentMonth = g_currentMission.environment.currentPeriod
-    local currentDay = g_currentMission.environment.currentDay
-
-    -- Time calculations
-    local minutesPerDay = 1440 -- 24 hours * 60 minutes
-    local minutesPerMonth = g_currentMission.environment.daysPerPeriod * minutesPerDay
-    local minutesPerYear = 12 * minutesPerMonth
-
-    -- Approximate last update time
-    local lastUpdateMinutesInGame = g_currentMission.environment.dayTime / 60000 + g_currentMission.environment.currentMonotonicDay * minutesPerDay - elapsedInMinutes
-
-    local lastYear = math.floor(lastUpdateMinutesInGame / minutesPerYear)
-    local lastMonth = math.floor((lastUpdateMinutesInGame % minutesPerYear) / minutesPerMonth) + 1
-
-    -- Compare to the target date
-    if lastYear < targetYear then
-        return true
-    elseif lastYear == targetYear and lastMonth < targetMonth then
-        return true
-    end
-
-    return false
-end
-
-local function getElapsedMinutesSince(targetMonth, targetYear)
-    -- Get the current in-game date and time
-    local currentYear = g_currentMission.environment.currentYear
-    local currentMonth = g_currentMission.environment.currentPeriod
-    local currentDay = g_currentMission.environment.currentDay
-    local currentTimeInMinutes = g_currentMission.environment.dayTime / 60000 -- Convert ms to minutes
-    
-    -- Time calculations
-    local minutesPerDay = 1440 -- 24 hours * 60 minutes
-    local minutesPerMonth = g_currentMission.environment.daysPerPeriod * minutesPerDay
-    local minutesPerYear = 12 * minutesPerMonth
-
-    -- Determine the starting point (Month +1)
-    local startMonth = targetMonth + 1
-    local startYear = targetYear
-
-    -- Handle rollover if the month exceeds 12
-    if startMonth > 12 then
-        startMonth = 1
-        startYear = startYear + 1
-    end
-
-    -- Compute the time of the given month +1 in minutes
-    local startMinutes = (startYear * minutesPerYear) + ((startMonth - 1) * minutesPerMonth)
-
-    -- Compute the current time in minutes
-    local currentMinutes = (currentYear * minutesPerYear) + ((currentMonth - 1) * minutesPerMonth) +
-                           ((currentDay - 1) * minutesPerDay) + currentTimeInMinutes
-
-    -- Return elapsed time
-    return currentMinutes - startMinutes
-end
-
 function ShelterMattersBale:showInfo(box)
     -- display best by date
     local bb = self:getBestBefore()
     if bb then
-        if bb.month > g_currentMission.environment.currentPeriod and bb.year > g_currentMission.environment.currentYear then
+        if bb.month < g_currentMission.environment.currentPeriod and bb.year <= g_currentMission.environment.currentYear then
             box:addLine(g_i18n:getText("SM_InfoBestBefore"), g_i18n:getText("SM_InfoExpired"))
         else
             local monthName = g_i18n:formatPeriod(bb.month, true)
+
             local inYears = bb.year - g_currentMission.environment.currentYear
-            if inYears > 0 then
-                box:addLine(g_i18n:getText("SM_InfoBestBefore"), string.format("%s in %d years", monthName, inYears))
+
+            -- Adjust for the shifted calendar where 1 = March and 12 = February
+            -- we will only shift the months by 1 to bring them to a 0 index base (0 = jan, 11 = dec)
+            local adjustedCurrentMonth = (g_currentMission.environment.currentPeriod + 1)
+            local adjustedTargetMonth = (bb.month + 1)
+
+            -- we need to adjust the year according to which month goes over the year threshold
+            inYears = inYears - math.floor(adjustedCurrentMonth / 12)
+            inYears = inYears + math.floor(adjustedTargetMonth / 12)
+
+            -- Display info
+            if inYears == 1 then
+                box:addLine(g_i18n:getText("SM_InfoBestBefore"), string.format(g_i18n:getText("SM_InfoBestBeforeNextYear"), monthName))
+            elseif inYears > 0 then
+                box:addLine(g_i18n:getText("SM_InfoBestBefore"), string.format(g_i18n:getText("SM_InfoBestBeforeInYears"), monthName, inYears))
             else
                 box:addLine(g_i18n:getText("SM_InfoBestBefore"), monthName)
             end
@@ -325,6 +279,10 @@ function ShelterMattersBale.loadBaleAttributesFromXMLFile(attributes, superFunc,
     attributes.decayAmount = xmlFile:getValue(key .. "#decayAmount")
     attributes.fillLevelFull = xmlFile:getValue(key .. "#fillLevelFull")
 
+    if attributes.bestBefore.month == nil or attributes.bestBefore.year == nil then
+        attributes.bestBefore = nil
+    end
+
     return superFunc(attributes, xmlFile, key, resetVehicles)
 end
 
@@ -355,7 +313,7 @@ function ShelterMattersBale.saveBaleAttributesToXMLFile(attributes, xmlFile, key
     xmlFile:setValue(key .. ".lastUpdate#day", attributes.lastUpdate.day)
     xmlFile:setValue(key .. ".lastUpdate#time", attributes.lastUpdate.time)
 
-    if attributes.bestBefore then
+    if attributes.bestBefore and attributes.bestBefore.month and attributes.bestBefore.year then
         xmlFile:setValue(key .. ".bestBefore#month", attributes.bestBefore.month)
         xmlFile:setValue(key .. ".bestBefore#year", attributes.bestBefore.year)
     end
