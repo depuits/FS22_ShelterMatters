@@ -97,13 +97,12 @@ function Bale:setBestBefore(bestBefore)
 end
 
 function Bale:addDecayAmount(decayAmount)
-    self:setDecayAmount(self.decayAmount + decayAmount)
-
     if self.fillLevelFull == nil then
         self:setFillLevelFull(self.fillLevel)
     end
 
-    self:setFillLevel(self.fillLevel - decayAmount)
+    self:setDecayAmount(self.decayAmount + decayAmount)
+    self:setFillLevel(self.fillLevel - decayAmount) --TODO recalculate mass
 
     if self.fillLevel <= 0 then
         self:delete()
@@ -114,7 +113,7 @@ function Bale:addDecayAmount(decayAmount)
 end
 
 function Bale:setDecayAmount(decayAmount)
-    self.decayAmount = MathUtil.clamp(decayAmount, 0, self.fillLevelFull or self.fillLevel)
+    self.decayAmount = MathUtil.clamp(decayAmount, 0, self.fillLevelFull)
 
     if self.isServer then
         self:raiseDirtyFlags(self.decayAmountDirtyFlag)
@@ -208,47 +207,11 @@ end
 function ShelterMattersBale:showInfo(box)
     -- display best by date
     local bb = self:getBestBefore()
-    if bb then
-        if bb.month < g_currentMission.environment.currentPeriod and bb.year <= g_currentMission.environment.currentYear then
-            box:addLine(g_i18n:getText("SM_InfoBestBefore"), g_i18n:getText("SM_InfoExpired"))
-        else
-            local monthName = g_i18n:formatPeriod(bb.month, true)
-
-            local inYears = bb.year - g_currentMission.environment.currentYear
-
-            -- Adjust for the shifted calendar where 1 = March and 12 = February
-            -- we will only shift the months by 1 to bring them to a 0 index base (0 = jan, 11 = dec)
-            local adjustedCurrentMonth = (g_currentMission.environment.currentPeriod + 1)
-            local adjustedTargetMonth = (bb.month + 1)
-
-            -- we need to adjust the year according to which month goes over the year threshold
-            inYears = inYears - math.floor(adjustedCurrentMonth / 12)
-            inYears = inYears + math.floor(adjustedTargetMonth / 12)
-
-            -- Display info
-            if inYears == 1 then
-                box:addLine(g_i18n:getText("SM_InfoBestBefore"), string.format(g_i18n:getText("SM_InfoBestBeforeNextYear"), monthName))
-            elseif inYears > 0 then
-                box:addLine(g_i18n:getText("SM_InfoBestBefore"), string.format(g_i18n:getText("SM_InfoBestBeforeInYears"), monthName, inYears))
-            else
-                box:addLine(g_i18n:getText("SM_InfoBestBefore"), monthName)
-            end
-        end
-    end
+    ShelterMattersHelpers.infoBoxAddBestBefore(box, bb)
 
     -- display wetness in info box
     if self:isAffectedByWetness() then
-        local wetnessDesc = "SM_InfoBaleWetness_1"
-        if self.wetness > 80 then
-            wetnessDesc = "SM_InfoBaleWetness_5"
-        elseif self.wetness > 60 then
-            wetnessDesc = "SM_InfoBaleWetness_4"
-        elseif self.wetness > 30 then
-            wetnessDesc = "SM_InfoBaleWetness_3"
-        elseif self.wetness > 0 then
-            wetnessDesc = "SM_InfoBaleWetness_2"
-        end
-        box:addLine(g_i18n:getText("SM_InfoBaleWetness"), g_i18n:getText(wetnessDesc))
+        ShelterMattersHelpers.infoBoxAddWetness(box, self.wetness)
     end
 
     -- display decay in info box
@@ -258,7 +221,7 @@ function ShelterMattersBale:showInfo(box)
     end
 
     if decayPercentage > 0 then
-        box:addLine(g_i18n:getText("SM_InfoBaleDecay"), string.format("%d%%", decayPercentage * 100))
+        box:addLine(g_i18n:getText("SM_InfoDecay"), string.format("%d%%", decayPercentage * 100))
     end
 end
 
@@ -268,16 +231,16 @@ function ShelterMattersBale.registerSavegameXMLPaths(schema, basePath)
     schema:register(XMLValueType.INT, basePath .. ".bestBefore#month", "Best before month of current bale")
     schema:register(XMLValueType.INT, basePath .. ".bestBefore#year", "Best before year of current bale")
     schema:register(XMLValueType.FLOAT, basePath .. "#wetness", "Wetness level of current bale")
-    schema:register(XMLValueType.FLOAT, basePath .. "#decayAmount", "Amount lost to decay of current bale")
     schema:register(XMLValueType.FLOAT, basePath .. "#fillLevelFull", "Current bale fill level when it was created")
+    schema:register(XMLValueType.FLOAT, basePath .. "#decayAmount", "Amount lost to decay of current bale")
 end
 
 function ShelterMattersBale.loadBaleAttributesFromXMLFile(attributes, superFunc, xmlFile, key, resetVehicles)
     attributes.lastUpdate = { day = xmlFile:getValue(key .. ".lastUpdate#day"), time = xmlFile:getValue(key .. ".lastUpdate#time") }
     attributes.bestBefore = { month = xmlFile:getValue(key .. ".bestBefore#month"), year = xmlFile:getValue(key .. ".bestBefore#year") }
     attributes.wetness = xmlFile:getValue(key .. "#wetness")
-    attributes.decayAmount = xmlFile:getValue(key .. "#decayAmount")
     attributes.fillLevelFull = xmlFile:getValue(key .. "#fillLevelFull")
+    attributes.decayAmount = xmlFile:getValue(key .. "#decayAmount")
 
     if attributes.bestBefore.month == nil or attributes.bestBefore.year == nil then
         attributes.bestBefore = nil
@@ -293,8 +256,8 @@ function ShelterMattersBale:getBaleAttributes(superFunc)
     attributes.bestBefore = self.bestBefore
 
     attributes.wetness = self.wetness
-    attributes.decayAmount = self.decayAmount
     attributes.fillLevelFull = self.fillLevelFull or self.fillLevel
+    attributes.decayAmount = self.decayAmount
 
     return attributes
 end
@@ -305,8 +268,8 @@ function ShelterMattersBale:applyBaleAttributes(attributes)
     self:setBestBefore(attributes.bestBefore or self.bestBefore)
 
     self:setWetness(attributes.wetness or self.wetness)
-    self:setDecayAmount(attributes.decayAmount or self.decayAmount)
     self:setFillLevelFull(attributes.fillLevelFull or self.fillLevelFull or self.fillLevel)
+    self:setDecayAmount(attributes.decayAmount or self.decayAmount)
 end
 
 function ShelterMattersBale.saveBaleAttributesToXMLFile(attributes, xmlFile, key)
@@ -319,8 +282,8 @@ function ShelterMattersBale.saveBaleAttributesToXMLFile(attributes, xmlFile, key
     end
 
     xmlFile:setValue(key .. "#wetness", attributes.wetness)
-    xmlFile:setValue(key .. "#decayAmount", attributes.decayAmount)
     xmlFile:setValue(key .. "#fillLevelFull", attributes.fillLevelFull)
+    xmlFile:setValue(key .. "#decayAmount", attributes.decayAmount)
 end
 
 function ShelterMattersBale:saveToXMLFile(xmlFile, key)
@@ -333,8 +296,8 @@ function ShelterMattersBale:saveToXMLFile(xmlFile, key)
     end
 
     xmlFile:setValue(key .. "#wetness", self.wetness)
-    xmlFile:setValue(key .. "#decayAmount", self.decayAmount)
     xmlFile:setValue(key .. "#fillLevelFull", self.fillLevelFull or self.fillLevel)
+    xmlFile:setValue(key .. "#decayAmount", self.decayAmount)
 end
 
 
@@ -346,11 +309,11 @@ function ShelterMattersBale:readUpdateStream(streamId, timestamp, connection)
         end
 
         if streamReadBool(streamId) then
-            self:setDecayAmount(streamReadFloat32(streamId))
+            self:setFillLevelFull(streamReadFloat32(streamId))
         end
 
         if streamReadBool(streamId) then
-            self:setFillLevelFull(streamReadFloat32(streamId))
+            self:setDecayAmount(streamReadFloat32(streamId))
         end
 
         if streamReadBool(streamId) then
@@ -367,24 +330,20 @@ function ShelterMattersBale:readUpdateStream(streamId, timestamp, connection)
 end
 function ShelterMattersBale:writeUpdateStream(streamId, connection, dirtyMask)
     if not connection:getIsServer() then
-        if streamWriteBool(streamId, bitAND(dirtyMask, self.wetnessAmountDirtyFlag) ~= 0) then
+        if streamWriteBool(streamId, bitAND(dirtyMask, self.wetnessDirtyFlag) ~= 0) then
             streamWriteFloat32(streamId, self.wetness)
+        end
+
+        if streamWriteBool(streamId, bitAND(dirtyMask, self.fillLevelFullDirtyFlag) ~= 0) then
+            streamWriteFloat32(streamId, self.fillLevelFull or self.fillLevel)
         end
 
         if streamWriteBool(streamId, bitAND(dirtyMask, self.decayAmountDirtyFlag) ~= 0) then
             streamWriteFloat32(streamId, self.decayAmount)
         end
 
-        if streamWriteBool(streamId, bitAND(dirtyMask, self.fillLevelFullDirtyFlag) ~= 0) then
-            streamWriteFloat32(streamId, self.fillLevelFull or self.fillLevel)
-        end
-
-        if streamWriteBool(streamId, bitAND(dirtyMask, self.fillLevelFullDirtyFlag) ~= 0) then
-            streamWriteFloat32(streamId, self.fillLevelFull or self.fillLevel)
-        end
-
         if streamWriteBool(streamId, bitAND(dirtyMask, self.bestBeforeDirtyFlag) ~= 0) then
-            if streamWriteBool(streamId, self.bestBefore) then
+            if streamWriteBool(streamId, self.bestBefore ~= nil) then
                 streamWriteInt32(streamId, self.bestBefore.month)
                 streamWriteInt32(streamId, self.bestBefore.year)
             end
@@ -393,8 +352,8 @@ function ShelterMattersBale:writeUpdateStream(streamId, connection, dirtyMask)
 end
 function ShelterMattersBale:readStream(streamId, connection)
     self.wetness = streamReadFloat32(streamId)
-    self.decayAmount = streamReadFloat32(streamId)
     self.fillLevelFull = streamReadFloat32(streamId)
+    self.decayAmount = streamReadFloat32(streamId)
     if streamReadBool(streamId) then
         local month = streamReadInt32(streamId)
         local year = streamReadInt32(streamId)
@@ -406,9 +365,9 @@ function ShelterMattersBale:readStream(streamId, connection)
 end
 function ShelterMattersBale:writeStream(streamId, connection)
     streamWriteFloat32(streamId, self.wetness)
-    streamWriteFloat32(streamId, self.decayAmount)
     streamWriteFloat32(streamId, self.fillLevelFull or self.fillLevel)
-    if streamWriteBool(streamId, self.bestBefore) then
+    streamWriteFloat32(streamId, self.decayAmount)
+    if streamWriteBool(streamId, self.bestBefore ~= nil) then
         streamWriteInt32(streamId, self.bestBefore.month)
         streamWriteInt32(streamId, self.bestBefore.year)
     end

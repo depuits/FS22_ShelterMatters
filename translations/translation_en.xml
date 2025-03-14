@@ -14,16 +14,17 @@
         <text name="SM_IndoorAreaRectangle25x50"        text="Indoor area rectangle 25x50"/>
 
         <text name="SM_AlertBaleDeleted"                text="%s bale lost due to improper storage."/>
+
         <text name="SM_InfoBestBefore"                  text="Best before"/>
         <text name="SM_InfoBestBeforeNextYear"          text="%s next year"/>
         <text name="SM_InfoBestBeforeInYears"           text="%s in %d years"/>
         <text name="SM_InfoExpired"                     text="Expired"/>
-        <text name="SM_InfoBaleDecay"                   text="Decay"/>
-        <text name="SM_InfoBaleWetness"                 text="Wetness"/>
-        <text name="SM_InfoBaleWetness_1"               text="Dry"/>
-        <text name="SM_InfoBaleWetness_2"               text="Slightly Moist"/>
-        <text name="SM_InfoBaleWetness_3"               text="Damp"/>
-        <text name="SM_InfoBaleWetness_4"               text="Wet"/>
-        <text name="SM_InfoBaleWetness_5"               text="Soaking Wet"/>
+        <text name="SM_InfoDecay"                       text="Decay"/>
+        <text name="SM_InfoWetness"                     text="Wetness"/>
+        <text name="SM_InfoWetness_1"                   text="Dry"/>
+        <text name="SM_InfoWetness_2"                   text="Slightly Moist"/>
+        <text name="SM_InfoWetness_3"                   text="Damp"/>
+        <text name="SM_InfoWetness_4"                   text="Wet"/>
+        <text name="SM_InfoWetness_5"                   text="Soaking Wet"/>
     </texts>
 </l10n>

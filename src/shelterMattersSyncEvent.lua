@@ -6,13 +6,12 @@ function ShelterMattersSyncEvent.emptyNew()
     return Event.new(ShelterMattersSyncEvent_mt)
 end
 
-function ShelterMattersSyncEvent.new(hideShelterStatusIcon, damageRates, weatherMultipliers, baleWeatherWetness, baleWetnessDecay)
+function ShelterMattersSyncEvent.new(hideShelterStatusIcon, damageRates, weatherMultipliers, decayProperties)
     local self = ShelterMattersSyncEvent.emptyNew()
     self.hideShelterStatusIcon = hideShelterStatusIcon
     self.damageRates = damageRates
     self.weatherMultipliers = weatherMultipliers
-    self.baleWeatherWetness = baleWeatherWetness
-    self.baleWetnessDecay = baleWetnessDecay
+    self.decayProperties = decayProperties
     return self
 end
 
@@ -39,21 +38,31 @@ function ShelterMattersSyncEvent:readStream(streamId, connection)
         self.weatherMultipliers[weatherType] = multiplier
     end
 
-    self.baleWeatherWetness = {}
+    self.decayProperties = {}
     count = streamReadInt32(streamId)
     for i = 1, count do
-        local weatherType = streamReadString(streamId)
-        local rate = streamReadFloat32(streamId)
-        self.baleWeatherWetness[weatherType] = rate
-    end
+        local fillType = streamReadUIntN(streamId, FillTypeManager.SEND_NUM_BITS)
+        self.decayProperties[fillType] = {}
 
-    self.baleWetnessDecay = streamReadFloat32(streamId)
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].wetnessImpact = streamReadFloat32(streamId)
+        end
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].wetnessDecay = streamReadFloat32(streamId)
+        end
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].bestBeforePeriod = streamReadInt32(streamId)
+        end
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].bestBeforeDecay = streamReadFloat32(streamId)
+        end
+    end
     
     self:run(connection)
 end
 
 function ShelterMattersSyncEvent:writeStream(streamId, connection)
-    if self.damageRates == nil or self.weatherMultipliers == nil or self.baleWeatherWetness == nill then
+    if self.damageRates == nil or self.weatherMultipliers == nil or self.decayProperties == nill then
         return
     end
 
@@ -84,19 +93,29 @@ function ShelterMattersSyncEvent:writeStream(streamId, connection)
         streamWriteFloat32(streamId, multiplier)
     end
 
-    -- Write baleWeatherWetness
-    local baleWeatherWetnessCount = 0
-    for _ in pairs(self.baleWeatherWetness) do
-        baleWeatherWetnessCount = baleWeatherWetnessCount + 1
+    -- Write decayProperties
+    local decayPropertiesCount = 0
+    for _ in pairs(self.decayProperties) do
+        decayPropertiesCount = decayPropertiesCount + 1
     end
-    streamWriteInt32(streamId, baleWeatherWetnessCount)
+    streamWriteInt32(streamId, decayPropertiesCount)
 
-    for weatherType, rate in pairs(self.baleWeatherWetness) do
-        streamWriteString(streamId, weatherType)
-        streamWriteFloat32(streamId, rate)
+    for fillType, props in pairs(self.decayProperties) do
+        streamWriteUIntN(streamId, fillType, FillTypeManager.SEND_NUM_BITS)
+        --TODO bools for if the value is not defined
+        if streamWriteBool(streamId, props.wetnessImpact ~= nil) then
+            streamWriteFloat32(streamId, props.wetnessImpact)
+        end
+        if streamWriteBool(streamId, props.wetnessDecay ~= nil) then
+            streamWriteFloat32(streamId, props.wetnessDecay)
+        end
+        if streamWriteBool(streamId, props.bestBeforePeriod ~= nil) then
+            streamWriteInt32(streamId, props.bestBeforePeriod)
+        end
+        if streamWriteBool(streamId, props.bestBeforeDecay ~= nil) then
+            streamWriteFloat32(streamId, props.bestBeforeDecay)
+        end
     end
-    
-    streamWriteFloat32(streamId, self.baleWetnessDecay)
 end
 
 function ShelterMattersSyncEvent:run(connection)
@@ -108,12 +127,11 @@ function ShelterMattersSyncEvent:run(connection)
     ShelterMatters.hideShelterStatusIcon = self.hideShelterStatusIcon
     ShelterMatters.damageRates = self.damageRates
     ShelterMatters.weatherMultipliers = self.weatherMultipliers
-    ShelterMatters.baleWeatherWetness = self.baleWeatherWetness
-    ShelterMatters.baleWetnessDecay = self.baleWetnessDecay
+    ShelterMatters.decayProperties = self.decayProperties
 end
 
 function ShelterMattersSyncEvent.sendToClients()
-    g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.hideShelterStatusIcon, ShelterMatters.damageRates, ShelterMatters.weatherMultipliers, ShelterMatters.baleWeatherWetness, ShelterMatters.baleWetnessDecay))
+    g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.hideShelterStatusIcon, ShelterMatters.damageRates, ShelterMatters.weatherMultipliers, ShelterMatters.decayProperties))
 end
 
 function ShelterMattersSyncEvent.sendToServer()
