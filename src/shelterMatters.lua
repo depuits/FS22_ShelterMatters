@@ -10,6 +10,7 @@ ShelterMatters.lastUpdateInGameTime = nil -- Global variable to track the last u
 ShelterMatters.isDevBuild = true -- Default is true; overridden by the build process if not in dev mode.
 
 ShelterMatters.hideShelterStatusIcon = false
+ShelterMatters.palletSpawnProtection = 24 -- time in hours for spawned pallets to have decay and wetness protection
 
 -- default values for weather multipliers
 ShelterMatters.weatherMultipliers = {
@@ -54,9 +55,19 @@ ShelterMatters.weatherWetnessRates = {
     rain    = 2.0
 }
 
--- save and loaded but not synced (TODO when implementing UI or commands)
+-- properties defining which conditions can make item decay
 ShelterMatters.decayProperties = {
     -- filled in on load
+    --[[
+        wetnessImpact = 1.5 -- Multiplier on weatherWetnessRates to make the weather impact more or less
+        wetnessDecay = 4000 -- Amount of decay when fully wet (liters/month)
+        bestBeforePeriod = 12,  -- Shelf life before decay starts (months)
+        bestBeforeDecay = 2000 -- Decays after best-before period ended (liters/month)
+        maxTemperature = 21 -- Maximum temperature the product stays good in (celcius)
+        maxTemperatureDecay = 1000 -- Decay when product stays above the maximum temperature (liters/hour)
+        minTemperature = -5 -- Minimum temperature the product stays good in (celcius)
+        minTemperatureDecay = 1000 -- Decay when product stays under the minimum temperature (liters/hour)
+    ]]--
 }
 
 addModEventListener(ShelterMatters)
@@ -149,7 +160,7 @@ function ShelterMatters:draw()
             end
         end
 
-        local isInside = ShelterMatters.isVehicleInShed(vehicle)
+        local isInside = ShelterMatters.isObjectInShed(vehicle)
         local icon = isInside and ShelterMatters.insideIcon or ShelterMatters.outsideIcon
 
         renderOverlay(icon, startX, startY, iconWidth, iconHeight)
@@ -176,6 +187,12 @@ function ShelterMatters:getWeather()
     return weatherTypes[weatherType] or "UNKNOWN"
 end
 
+function ShelterMatters:getWeatherWetnessRate()
+    local weather = self:getWeather()
+
+    return self.weatherWetnessRates[weather] or self.weatherWetnessRates.default or 0
+end
+
 --[[
 Base logic
 ]]
@@ -184,14 +201,12 @@ function ShelterMatters:update(dt)
         return -- Skip on clients
     end
 
+    -- Apply the damages to bales left outside 
+    self:updateAllBales()
+
     -- Get the current in-game time in hours
     local currentInGameHours = g_currentMission.environment.dayTime / (60 * 60 * 1000) -- ms to hours
 
-    local weather = self:getWeather()
-
-    -- Apply the damages to bales left outside 
-    local weatherWetness = self.weatherWetnessRates[weather] or self.weatherWetnessRates.default or 0
-    self:updateAllBalesDamage(weatherWetness)
 
     -- Initialize the lastUpdateInGameTime if this is the first run
     if self.lastUpdateInGameTime == nil then
@@ -214,6 +229,7 @@ function ShelterMatters:update(dt)
     self.lastUpdateInGameTime = currentInGameHours
 
     -- Get effect of the current weather
+    local weather = self:getWeather()
     local weatherMultiplier = self.weatherMultipliers[weather] or 1
 
     -- Apply the damages to vehicles left outside
@@ -222,11 +238,11 @@ function ShelterMatters:update(dt)
     end
 end
 
-function ShelterMatters:updateAllBalesDamage(wetnessRate) 
+function ShelterMatters:updateAllBales() 
     for _, saveItem in pairs(g_currentMission.itemSystem.itemsToSave) do
         -- Check if the object is a bale by checking its class name
         if saveItem.className == "Bale" then
-            ShelterMattersBale.updateBale(saveItem.item, wetnessRate)
+            ShelterMattersBale.update(saveItem.item)
         end
     end
 end
@@ -235,7 +251,7 @@ function ShelterMatters:getVehicleDetailsString(vehicle)
     local typeName = vehicle.typeName
     local damageRate = self.damageRates[typeName] or self.damageRates.default
 
-    local inShed = ShelterMatters.isVehicleInShed(vehicle)
+    local inShed = ShelterMatters.isObjectInShed(vehicle)
 
     return ("Entity type: " .. (typeName or "unknown") ..
         "\nEntity name: " .. vehicle:getFullName() ..
@@ -257,7 +273,7 @@ function ShelterMatters:updateDamageAmount(vehicle, elapsedInGameHours, multipli
         return
     end
 
-    local inShed = ShelterMatters.isVehicleInShed(vehicle)
+    local inShed = ShelterMatters.isObjectInShed(vehicle)
     if not inShed then
         local baseOutsideDamage = self:getDamageRate(vehicle) -- damage percentage per ingame hour
         local outsideDamage = (baseOutsideDamage * multiplier * elapsedInGameHours)
@@ -275,113 +291,9 @@ function ShelterMatters:getDamageRate(vehicle)
     return damageRateScaled
 end
 
-function ShelterMatters.isVehicleInShed(vehicle)
-    return ShelterMatters.isNodeInShed(vehicle.rootNode)
+function ShelterMatters.isObjectInShed(object)
+    return ShelterMattersIndoorDetection.isObjectInShed(object)
 end
-
-function ShelterMatters.isNodeInShed(node)
-    -- Get the node's position
-    local vx, vy, vz = getWorldTranslation(node)
-
-    for _, placeable in pairs(g_currentMission.placeableSystem.placeables) do
-        if ShelterMatters.isPointInsideplaceable(vx, vy, vz, placeable) then
-            return true
-        end
-    end
-    return false
-end
-
--- Function to calculate distance between two points in 3D space
-local function calculateDistance(x1, y1, z1, x2, y2, z2)
-    local dx = x2 - x1
-    local dy = y2 - y1
-    local dz = z2 - z1
-    return math.sqrt(dx * dx + dy * dy + dz * dz)
-end
-
--- Function to check if a vehicle is inside any indoor area of a placeable
-function ShelterMatters.isPointInsideplaceable(x, y, z, placeable)
-    if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
-        return false
-    end
-
-    local rootX, rootY, rootZ = getWorldTranslation(placeable.rootNode)
-    local distance = calculateDistance(x, y, z, rootX, rootY, rootZ)
-    -- optimization: no shed is bigger then 200 meters so we don't check when obtjects are further away then 100m from the placeable center
-    if distance > 100 then
-        return false
-    end
-
-    -- Check all indoor areas
-    for _, indoorArea in ipairs(placeable.spec_indoorAreas.areas) do
-        if ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable) then
-            return true
-        end
-    end
-
-    return false
-end
-
-function ShelterMatters.isPointInsideIndoorArea(x, y, z, indoorArea, placeable)
-    -- Get the position and rotation of the root node
-    local rootX, rootY, rootZ = getWorldTranslation(placeable.rootNode)
-    local rotX, rotY, rotZ = getWorldRotation(placeable.rootNode)
-
-    -- Get world positions of width and height nodes
-    local startX, startY, startZ = getWorldTranslation(indoorArea.start)
-    local widthX, widthY, widthZ = getWorldTranslation(indoorArea.width)
-    local heightX, heightY, heightZ = getWorldTranslation(indoorArea.height)
-
-    -- Translate nodes to the root node's local space
-    local function transformToLocalSpace(worldX, worldY, worldZ)
-        local relX, relY, relZ = worldX - rootX, worldY - rootY, worldZ - rootZ
-
-        -- Apply rotation around the root node
-        local cosY = math.cos(-rotY)
-        local sinY = math.sin(-rotY)
-
-        local localX = relX * cosY - relZ * sinY
-        local localZ = relX * sinY + relZ * cosY
-        return localX, relY, localZ
-    end
-
-    -- Convert indoor area nodes to local space
-    local localStartX, localStartY, localStartZ = transformToLocalSpace(startX, startY, startZ)
-    local localWidthX, localWidthY, localWidthZ = transformToLocalSpace(widthX, widthY, widthZ)
-    local localHeightX, localHeightY, localHeightZ = transformToLocalSpace(heightX, heightY, heightZ)
-    local localX, localY, localZ = transformToLocalSpace(x, y, z)
-
-    -- Compute all possible bounds (accounting for reversed nodes)
-    local minX = math.min(localStartX, localWidthX, localHeightX)
-    local maxX = math.max(localStartX, localWidthX, localHeightX)
-    local minZ = math.min(localStartZ, localWidthZ, localHeightZ)
-    local maxZ = math.max(localStartZ, localWidthZ, localHeightZ)
-
-    -- Check if the position is within the axis-aligned bounds
-    local withinX = localX >= minX and localX <= maxX
-    local withinZ = localZ >= minZ and localZ <= maxZ
-
---[[if distance < 50 then
-        ShelterMatters.log("placeable: " .. (placeable.typeName or "unknown") .. string.format(" Distance to Start Node: %.2f", distance))
-
-        ShelterMatters.log(string.format(" placeable rot: x %.2f, y %.2f, z %.2f", rotX, rotY, rotZ))
-        ShelterMatters.log(string.format(" start Node: x %.2f, y %.2f, z %.2f", startX, startY, startZ))
-        ShelterMatters.log(string.format(" width Node: x %.2f, y %.2f, z %.2f", widthX, widthY, widthZ))
-        ShelterMatters.log(string.format(" height Node: x %.2f, y %.2f, z %.2f", heightX, heightY, heightZ))
-        ShelterMatters.log("withinX: " .. tostring(withinX))
-        ShelterMatters.log("withinZ: " .. tostring(withinZ))
-
-        ShelterMatters.log(string.format("Local Start: %.2f, %.2f", localStartX, localStartZ))
-        ShelterMatters.log(string.format("Local Width: %.2f, %.2f", localWidthX, localWidthZ))
-        ShelterMatters.log(string.format("Local Height: %.2f, %.2f", localHeightX, localHeightZ))
-        ShelterMatters.log(string.format("Local Vehicle Position: %.2f, %.2f", localX, localZ))
-        ShelterMatters.log(string.format("Bounds: X(%.2f, %.2f), Z(%.2f, %.2f)", minX, maxX, minZ, maxZ))
-    end]]
-
-    return withinX and withinZ
-end
-
-
 
 --[[
     Config saving and loading
@@ -407,6 +319,8 @@ function ShelterMatters:saveConfig()
     local xmlFile = createXMLFile("ShelterMattersConfig", configFile, "ShelterMatters")
 
     setXMLBool(xmlFile, "ShelterMatters.hideShelterStatusIcon", self.hideShelterStatusIcon)
+
+    setXMLInt(xmlFile, "ShelterMatters.palletSpawnProtection", self.palletSpawnProtection)
 
     local i = 0
     for typeName, rate in pairs(self.damageRates) do
@@ -452,37 +366,7 @@ end
 
 function ShelterMatters:loadConfig()
     -- initialize default decay properties
-    self.decayProperties = {
-        [g_fillTypeManager:getFillTypeIndexByName("DRYGRASS_WINDROW")] = {
-            wetnessImpact = 1.5,  -- **Hay absorbs rain quickly** due to being dried
-            wetnessDecay = 4000,  -- Moderate decay when fully wet (liters/month)
-            bestBeforePeriod = 12,  -- **Shelf life before decay starts (months)**
-            bestBeforeDecay = 2000 -- Decays faster after best-before period (liters/month)
-        },
-
-        [g_fillTypeManager:getFillTypeIndexByName("SILAGE")] = {
-            wetnessImpact = 0.6,  -- **Unwrapped silage absorbs rain slowly**
-            wetnessDecay = 2000,  -- **Decays when soaked**, but slower than straw/grass
-            bestBeforePeriod = 18, -- **Longer shelf life (months)**
-            bestBeforeDecay = 1000 -- Gradual decay after best-before period
-        },
-
-        [g_fillTypeManager:getFillTypeIndexByName("STRAW")] = {
-            wetnessImpact = 1.2,  -- **Straw absorbs rain quickly**, but not as fast as hay
-            wetnessDecay = 5000,  -- **Severe decay when fully wet**
-            bestBeforePeriod = 26, -- **Extended shelf life (months)**
-            bestBeforeDecay = 1000 -- Slower decay after best-before period
-        },
-
-        [g_fillTypeManager:getFillTypeIndexByName("GRASS")] = {
-            wetnessImpact = 0.8,  -- **Fresh grass has moisture**, absorbs rain more slowly
-            wetnessDecay = 6000,  -- **Decays the fastest when wet**
-            bestBeforePeriod = 3,  -- **Short shelf life (months)**
-            bestBeforeDecay = 3000 -- Heavy decay after best-before period
-        }
-
-        --TODO expand
-    }
+    self.decayProperties = ShelterMattersDefaultRules.loadDefaultDecayProperties()
 
     local configFile = self:getSavegameConfigPath()
     if not configFile then
@@ -499,6 +383,8 @@ function ShelterMatters:loadConfig()
     local xmlFile = loadXMLFile("ShelterMattersConfig", configFile)
 
     self.hideShelterStatusIcon = Utils.getNoNil(getXMLBool(xmlFile, "ShelterMatters.hideShelterStatusIcon"), false)
+
+    self.palletSpawnProtection = Utils.getNoNil(getXMLInt(xmlFile, "ShelterMatters.palletSpawnProtection"), self.palletSpawnProtection)
 
     local i = 0
     while true do
@@ -573,7 +459,6 @@ function ShelterMatters:loadConfig()
 
         i = i + 1
     end
-
 
     delete(xmlFile)
     ShelterMatters.log("Configuration loaded from: " .. configFile)

@@ -102,7 +102,7 @@ function ShelterMattersSyncEvent:writeStream(streamId, connection)
 
     for fillType, props in pairs(self.decayProperties) do
         streamWriteUIntN(streamId, fillType, FillTypeManager.SEND_NUM_BITS)
-        --TODO bools for if the value is not defined
+
         if streamWriteBool(streamId, props.wetnessImpact ~= nil) then
             streamWriteFloat32(streamId, props.wetnessImpact)
         end
