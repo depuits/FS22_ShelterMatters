@@ -4,7 +4,7 @@ local modName = g_currentModName
 
 ShelterMattersObjectDecay = {}
 ShelterMattersObjectDecay.SPEC_NAME = "ObjectDecay"
-ShelterMattersObjectDecay.SPEC_TABLE_NAME = "spec_"..modName.."."..ShelterMattersObjectDecay.SPEC_NAME
+ShelterMattersObjectDecay.SPEC_TABLE_NAME = "spec_"..modName..".shelterMatters"..ShelterMattersObjectDecay.SPEC_NAME
 
 function ShelterMattersObjectDecay.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(FillUnit, specializations)

@@ -69,7 +69,7 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         minTemperature = 0,
         minTemperatureDecay = 10  -- **Freezing damages it but slower**
     })
-    ShelterMattersDefaultRules.addDecayProperties(list, "TOMATOES", {
+    ShelterMattersDefaultRules.addDecayProperties(list, "TOMATO", {
         bestBeforePeriod = 3, 
         bestBeforeDecay = 4000,
         maxTemperature = 20,
@@ -77,7 +77,7 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         minTemperature = 0,
         minTemperatureDecay = 5  
     })
-    ShelterMattersDefaultRules.addDecayProperties(list, "STRAWBERRIES", {
+    ShelterMattersDefaultRules.addDecayProperties(list, "STRAWBERRY", {
         bestBeforePeriod = 3, 
         bestBeforeDecay = 6000,
         maxTemperature = 20,
@@ -105,7 +105,7 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
     -------------------
     -- Misc products --
     -------------------
-    ShelterMattersDefaultRules.addDecayProperties(list, "EGGS", {
+    ShelterMattersDefaultRules.addDecayProperties(list, "EGG", {
         bestBeforePeriod = 5, 
         bestBeforeDecay = 2000,
         maxTemperature = 15,
@@ -117,17 +117,11 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         maxTemperature = 30,
         maxTemperatureDecay = 2  -- **Resistant to heat**
     })
-    ShelterMattersDefaultRules.addDecayProperties(list, "GRAPE_JUICE", {
+    ShelterMattersDefaultRules.addDecayProperties(list, "GRAPEJUICE", {
         bestBeforePeriod = 14, 
         bestBeforeDecay = 2000,
         maxTemperature = 30,
         maxTemperatureDecay = 5  
-    })
-    ShelterMattersDefaultRules.addDecayProperties(list, "WINE", {
-        bestBeforePeriod = 72, 
-        bestBeforeDecay = 200,
-        maxTemperature = 30,
-        maxTemperatureDecay = 1  -- **Very slow decay in heat**
     })
     ShelterMattersDefaultRules.addDecayProperties(list, "FLOUR", {
         wetnessImpact = 1.2, 
@@ -153,6 +147,6 @@ end
 
 function ShelterMattersDefaultRules.addDecayProperties(list, name, props)
     local index = g_fillTypeManager:getFillTypeIndexByName(name)
-    print(name .. ": " .. index)
+    --TODO chec if valid
     list[index] = props
 end
