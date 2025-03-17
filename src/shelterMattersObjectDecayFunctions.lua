@@ -99,7 +99,7 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     local decayPercentage = 0
     local fillLevelFull = object:getFillLevelFull()
     if fillLevelFull > 0 then 
-        decayPercentage = object:getDecayAmount / fillLevelFull
+        decayPercentage = object:getDecayAmount() / fillLevelFull
     end
 
     if decayPercentage > 0 then

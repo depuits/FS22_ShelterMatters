@@ -5,7 +5,7 @@ TypeManager.finalizeTypes = Utils.prependedFunction(TypeManager.finalizeTypes, f
 		for typeName, typeEntry in pairs(self:getTypes()) do
 			for name, _ in pairs(typeEntry.specializationsByName) do
 				if name == "fillUnit" then
-					self:addSpecialization(typeName, modName..".fillUnitDecay")
+					self:addSpecialization(typeName, modName..".shelterMattersObjectDecay")
 					break
 					end
 				end

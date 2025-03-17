@@ -91,16 +91,14 @@ end
 --------------------------------------------
 
 function Bale:getLastDecayUpdate()
-    local spec = self[FillUnitDecay.SPEC_TABLE_NAME]
-    return spec.lastUpdate
+    return self.lastUpdate
 end
 
 function Bale:setLastDecayUpdate(lastUpdate)
-    local spec = self[FillUnitDecay.SPEC_TABLE_NAME]
-    spec.lastUpdate = lastUpdate
+    self.lastUpdate = lastUpdate
 end
 
-function FillUnitDecay:getSpawnTime()
+function Bale:getSpawnTime()
     return self.spawnTime
 end
 
@@ -123,7 +121,7 @@ function Bale:isAffectedByWetness()
     return decayProps and -- should have decay properties defined
         decayProps.wetnessImpact and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
         decayProps.wetnessDecay and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
-        self.wrappingState ~= 1 and -- wrapped bales don't get wet
+        self.wrappingState ~= 1 -- wrapped bales don't get wet
 end
 
 function Bale:getFillLevelFull()
