@@ -11,31 +11,31 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
     -----------
     ShelterMattersDefaultRules.addDecayProperties(list, "DRYGRASS_WINDROW", {
         bestBeforePeriod = 12,  -- **Shelf life before decay starts (months)**
-        bestBeforeDecay = 2000 -- Decays faster after best-before period (liters/month)
+        bestBeforeDecay = 2000, -- Decays faster after best-before period (liters/month)
         wetnessImpact = 1.5,  -- **Hay absorbs rain quickly** due to being dried
-        wetnessDecay = 4000,  -- Moderate decay when fully wet (liters/month)
+        wetnessDecay = 4000  -- Moderate decay when fully wet (liters/month)
     })
     ShelterMattersDefaultRules.addDecayProperties(list, "SILAGE", {
         bestBeforePeriod = 18, -- **Longer shelf life (months)**
-        bestBeforeDecay = 1000 -- Gradual decay after best-before period
+        bestBeforeDecay = 1000, -- Gradual decay after best-before period
         wetnessImpact = 0.6,  -- **Unwrapped silage absorbs rain slowly**
-        wetnessDecay = 2000,  -- **Decays when soaked**, but slower than straw/grass
+        wetnessDecay = 2000  -- **Decays when soaked**, but slower than straw/grass
     })
     ShelterMattersDefaultRules.addDecayProperties(list, "STRAW", {
         bestBeforePeriod = 26, -- **Extended shelf life (months)**
-        bestBeforeDecay = 500 -- Slower decay after best-before period
+        bestBeforeDecay = 500, -- Slower decay after best-before period
         wetnessImpact = 1.2,  -- **Straw absorbs rain quickly**, but not as fast as hay
-        wetnessDecay = 5000,  -- **Severe decay when fully wet**
+        wetnessDecay = 5000  -- **Severe decay when fully wet**
     })
     ShelterMattersDefaultRules.addDecayProperties(list, "GRASS", {
         bestBeforePeriod = 3,  -- **Short shelf life (months)**
-        bestBeforeDecay = 3000 -- Heavy decay after best-before period
+        bestBeforeDecay = 3000, -- Heavy decay after best-before period
         wetnessImpact = 0.8,  -- **Fresh grass has moisture**, absorbs rain more slowly
-        wetnessDecay = 6000,  -- **Decays the fastest when wet**
+        wetnessDecay = 6000  -- **Decays the fastest when wet**
     })
     ShelterMattersDefaultRules.addDecayProperties(list, "COTTON", {
         wetnessImpact = 1.5,
-        wetnessDecay = 1000,
+        wetnessDecay = 1000
     })
 
     ------------------------
@@ -251,13 +251,13 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         bestBeforePeriod = 2, 
         bestBeforeDecay = 8000, 
         maxTemperature = 10,
-        maxTemperatureDecay = 20,  -- **20 liters per minute decay when too warm**
+        maxTemperatureDecay = 20  -- **20 liters per minute decay when too warm**
     })
     ShelterMattersDefaultRules.addDecayProperties(list, "GOATMILK", {
         bestBeforePeriod = 2, 
         bestBeforeDecay = 8000, 
         maxTemperature = 10,
-        maxTemperatureDecay = 20,  -- **20 liters per minute decay when too warm**
+        maxTemperatureDecay = 20  -- **20 liters per minute decay when too warm**
     })
 
     ---------------------
@@ -284,8 +284,6 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
     ShelterMattersDefaultRules.addDecayProperties(list, "CAKE", {
         bestBeforePeriod = 3,
         bestBeforeDecay = 4000,
-        wetnessImpact = 2.5,
-        wetnessDecay = 8000,
         maxTemperature = 15,
         maxTemperatureDecay = 30,
         minTemperature = 0,
@@ -396,7 +394,7 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         bestBeforePeriod = 24,
         bestBeforeDecay = 250,
         wetnessImpact = 1.5,
-        wetnessDecay = 5000,
+        wetnessDecay = 5000
     })
 
     ShelterMattersDefaultRules.addDecayProperties(list, "LIQUIDFERTILIZER", {
@@ -408,7 +406,7 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         bestBeforePeriod = 12,
         bestBeforeDecay = 3000,
         wetnessImpact = 1.5,
-        wetnessDecay = 5000,
+        wetnessDecay = 5000
     })
 
     ShelterMattersDefaultRules.addDecayProperties(list, "LIME", {
@@ -422,7 +420,7 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         bestBeforePeriod = 14,
         bestBeforeDecay = 2000,
         wetnessImpact = 1.2,
-        wetnessDecay = 6000,
+        wetnessDecay = 6000
     })
 
     ShelterMattersDefaultRules.addDecayProperties(list, "SEEDS", {
