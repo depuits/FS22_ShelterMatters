@@ -50,7 +50,7 @@ ShelterMatters.damageRates = {
 -- default values for wetness rates per game minute in weather conditions (expressed in %/min)
 ShelterMatters.weatherWetnessRates = {
     default = 0.0,
-    fog     = 0.5,
+    fog     = 0.1,
     snow    = 1.0,
     rain    = 2.0
 }

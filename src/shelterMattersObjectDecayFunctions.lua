@@ -123,11 +123,16 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     end
 
     -- display temperature in info box
-    local hasMaxTemp = decayProps.maxTemperature and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0
-    local hasMinTemp = decayProps.minTemperature and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0
-    if hasMaxTemp or hasMinTemp then
-        -- TODO show range (see localization eg celcius and farenheit)
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%d%%", decayProps.minTemperature))
+    local hasMaxTemp = decayProps and decayProps.maxTemperature and decayProps.maxTemperatureDecay > 0
+    local hasMinTemp = decayProps and decayProps.minTemperature and decayProps.minTemperatureDecay > 0
+
+    -- TODO show range (see localization eg celcius and farenheit)
+    if hasMaxTemp and hasMinTemp then
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%d - %d", decayProps.maxTemperature, decayProps.maxTemperature))
+    elseif hasMaxTemp then
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("Lower then %d", decayProps.maxTemperature))
+    elseif hasMinTemp then
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("Higher then %d", decayProps.maxTemperature))
     end
 
     -- display decay in info box
