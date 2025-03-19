@@ -28,6 +28,9 @@ function ShelterMattersObjectDecayFunctions.update(object)
         return
     end
 
+    -- Store the last update time
+    object:setLastDecayUpdate({ day = currentDay, time = currentTime })
+
     -- check if spawn protection is applied
     local spawnTime = object:getSpawnTime()
     if spawnTime ~= nil then
@@ -41,11 +44,10 @@ function ShelterMattersObjectDecayFunctions.update(object)
         end
     end
 
-    -- Store the last update time
-    object:setLastDecayUpdate({ day = currentDay, time = currentTime })
-
     local decayProps = object:getDecayProperties()
+    local inShed = nil -- preinit inShed so when it is calculated in one of the step it can be reused
 
+    -- update wetness impact
     if object:isAffectedByWetness() then -- we will not check wetness if the is no decay for it
         local wetnessRate = ShelterMatters:getWeatherWetnessRate()
         -- update wetness
@@ -53,17 +55,42 @@ function ShelterMattersObjectDecayFunctions.update(object)
             wetnessRate > 0 and -- only if there is a wetnessRate
             object:getWetness() < 1 -- object is not yet soaked
         then
-            local inShed = ShelterMatters.isObjectInShed(object)
+            inShed = ShelterMatters.isObjectInShed(object, inShed)
             if not inShed then
                 object:setWetness(object:getWetness() + (wetnessRate * decayProps.wetnessImpact * elapsedInMinutes))
             end
         end
 
         -- update decay by wetness
-        if object:getWetness() > 0 then -- only if the bale is wet then it will decay
+        if object:getWetness() > 0 then -- only if the object is wet then it will decay
             local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
             local wetnessDamage = (decayPerMinute * elapsedInMinutes) * object:getWetness()
             object:addDecayAmount(wetnessDamage)
+        end
+    end
+
+    -- update temperature impact
+    if object:isAffectedByTemperature() then
+        local temperature = g_currentMission.environment.weather:getCurrentTemperature()
+
+        -- max tempertature decay
+        if decayProps.maxTemperature and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0 then
+            inShed = ShelterMatters.isObjectInShed(object, inShed)
+            if not inShed then -- only if the object is not inside it will decay
+                local decayPerMinute = decayProps.maxTemperatureDecay / 60
+                local wetnessDamage = (decayPerMinute * elapsedInMinutes)
+                object:addDecayAmount(wetnessDamage)
+            end
+        end
+
+        -- min temperature decay
+        if decayProps.minTemperature and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0 then
+            inShed = ShelterMatters.isObjectInShed(object, inShed)
+            if not inShed then -- only if the object is not inside it will decay
+                local decayPerMinute = decayProps.minTemperatureDecay / 60
+                local wetnessDamage = (decayPerMinute * elapsedInMinutes)
+                object:addDecayAmount(wetnessDamage)
+            end
         end
     end
 
@@ -93,6 +120,14 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     -- display wetness in info box
     if ShelterMattersObjectDecayFunctions.shouldDisplayWetness(object) then
         ShelterMattersHelpers.infoBoxAddWetness(box, object:getWetness())
+    end
+
+    -- display temperature in info box
+    local hasMaxTemp = decayProps.maxTemperature and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0
+    local hasMinTemp = decayProps.minTemperature and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0
+    if hasMaxTemp or hasMinTemp then
+        -- TODO show range (see localization eg celcius and farenheit)
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%d%%", decayProps.minTemperature))
     end
 
     -- display decay in info box
@@ -177,8 +212,10 @@ function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
 end
 
 function ShelterMattersObjectDecayFunctions.saveToXMLFile(xmlFile, key, spec)
-    xmlFile:setValue(key .. ".lastUpdate#day", spec.lastUpdate.day)
-    xmlFile:setValue(key .. ".lastUpdate#time", spec.lastUpdate.time)
+    if spec.lastUpdate then -- it is posible that a bale was never updated if this mod is added to an existing savegame
+        xmlFile:setValue(key .. ".lastUpdate#day", spec.lastUpdate.day)
+        xmlFile:setValue(key .. ".lastUpdate#time", spec.lastUpdate.time)
+    end
 
     if spec.spawnTime then
         xmlFile:setValue(key .. ".spawnTime#day", spec.spawnTime.day)

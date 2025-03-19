@@ -3,8 +3,8 @@
 local modName = g_currentModName
 
 ShelterMattersObjectDecay = {}
-ShelterMattersObjectDecay.SPEC_NAME = "ObjectDecay"
-ShelterMattersObjectDecay.SPEC_TABLE_NAME = "spec_"..modName..".shelterMatters"..ShelterMattersObjectDecay.SPEC_NAME
+ShelterMattersObjectDecay.SPEC_NAME = "shelterMattersObjectDecay"
+ShelterMattersObjectDecay.SPEC_TABLE_NAME = "spec_"..modName.."."..ShelterMattersObjectDecay.SPEC_NAME
 
 function ShelterMattersObjectDecay.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(FillUnit, specializations)
@@ -41,6 +41,7 @@ function ShelterMattersObjectDecay.registerFunctions(vehicleType)
     SpecializationUtil.registerFunction(vehicleType, "setDecayAmount", ShelterMattersObjectDecay.setDecayAmount)
     SpecializationUtil.registerFunction(vehicleType, "getDecayProperties", ShelterMattersObjectDecay.getDecayProperties)
     SpecializationUtil.registerFunction(vehicleType, "isAffectedByWetness", ShelterMattersObjectDecay.isAffectedByWetness)
+    SpecializationUtil.registerFunction(vehicleType, "isAffectedByTemperature", ShelterMattersObjectDecay.isAffectedByTemperature) 
 end
 
 function ShelterMattersObjectDecay.registerOverwrittenFunctions(vehicleType)
@@ -83,11 +84,29 @@ end
 function ShelterMattersObjectDecay:showInfo(superFunc, box)
     -- debugging stuff
     box:addLine("type", tostring(self.typeName))
-    box:addLine("isAffected", tostring(self:isAffectedByWeather()))
+    box:addLine("getIsPallet", tostring(self:getIsPallet()))
+    box:addLine("isAffectedByWetness", tostring(self:isAffectedByWetness()))
+    box:addLine("isAffectedByWeather", tostring(self:isAffectedByWeather()))
     box:addLine("isCoverClosed", tostring(self:getIsCoverClosed()))
 
+    local inShed = ShelterMatters.isObjectInShed(self)
+    box:addLine("inShed", tostring(inShed))
+
+    local spawnTime = self:getSpawnTime()
+    if spawnTime ~= nil then
+        -- calculate diference in time
+        local elapsedSinceSpawn = (currentDay - spawnTime.day) * (24 * 60 * 60 * 1000) + (currentTime - spawnTime.time)
+        local elapsedSinceSpawnInHours = elapsedTime / (60 * 60 * 1000) -- Convert from ms to hours
+
+        -- if the spwan proection is within the timeframe don't execute the rest of the function
+        if elapsedSinceSpawnInHours < ShelterMatters.palletSpawnProtection then
+            box:addLine("spawnProtection", "true")
+        else
+            box:addLine("spawnProtection", "false")
+        end
+    end
     -- debug spec rendering
-    --ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
+    ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
 
     ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, self)
 
@@ -155,6 +174,16 @@ function ShelterMattersObjectDecay:isAffectedByWetness()
         self:getIsPallet() -- currently only pallets are affected we'll want to expand this in the future to also include trailers etc
 end
 
+function ShelterMattersObjectDecay:isAffectedByTemperature()
+    -- only things with a decay rate are affected by wetness
+    local decayProps = self:getDecayProperties()
+
+    return decayProps and ( -- should have decay properties defined
+        ( decayProps.maxTemperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
+        ( decayProps.minTemperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
+    ) and self:getIsPallet() -- and currently only pallets are affected we'll want to expand this in the future to also include trailers etc
+end
+
 function ShelterMattersObjectDecay:getFillLevelFull()
     local spec = self[ShelterMattersObjectDecay.SPEC_TABLE_NAME]
 
@@ -166,8 +195,7 @@ function ShelterMattersObjectDecay:getFillLevelFull()
         -- so we should update the spawn protection time to start from here
         if spec.fillLevelFull > 0 and self:getIsPallet() then
             -- we only do this when the previous fillLevelFull was 0
-            -- if not then the pallets could also be spawned by buying from the store and in that case there is no spawn protetion
-            --TODO set spanwProtectionTime
+            -- if not then the pallets could also be spawned by buying from the store and in that case there is no spawn protection
             local currentDay = g_currentMission.environment.currentMonotonicDay
             local currentTime = g_currentMission.environment.dayTime
 
@@ -285,7 +313,7 @@ function ShelterMattersObjectDecay:isAffectedByWeather()
 end
 
 function ShelterMattersObjectDecay:getIsPallet()
-    return self.typeName == "pallet" or self.typeName == "treeSaplingPallet" or self.typeName == "bigBag"
+    return SpecializationUtil.hasSpecialization(Pallet, self.specializations)
 end
 
 function ShelterMattersObjectDecay:getIsCoverClosed()

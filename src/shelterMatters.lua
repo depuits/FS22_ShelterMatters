@@ -171,9 +171,6 @@ function ShelterMatters:getWeather()
     local weatherSystem = g_currentMission.environment.weather
     local weatherType = weatherSystem:getCurrentWeatherType()
 
-    --local weatherObject = weatherSystem.typeToWeatherObject[weatherType]
-    --DebugUtil.printTableRecursively(weatherObject, "Wheater: ", 0, 1)
-
     -- Map the weather type to a string
     -- TODO debug if these values are correct
     local weatherTypes = {
@@ -291,8 +288,12 @@ function ShelterMatters:getDamageRate(vehicle)
     return damageRateScaled
 end
 
-function ShelterMatters.isObjectInShed(object)
-    return ShelterMattersIndoorDetection.isObjectInShed(object)
+function ShelterMatters.isObjectInShed(object, inShed) -- optional inShed parameter, if this is not nil then the inShed value will be returned else we will check in the world if we need to calculate the inShed
+    if inShed == nil then
+        return ShelterMattersIndoorDetection.isObjectInShed(object)
+    else
+        return inShed
+    end
 end
 
 --[[
@@ -353,8 +354,16 @@ function ShelterMatters:saveConfig()
         setXMLString(xmlFile, key .. "#type", fillTypeName)
         if props.wetnessImpact then setXMLFloat(xmlFile, key .. "#wetnessImpact", props.wetnessImpact) end
         if props.wetnessDecay then setXMLFloat(xmlFile, key .. "#wetnessDecay", props.wetnessDecay) end
+
         if props.bestBeforePeriod then setXMLInt(xmlFile, key .. "#bestBeforePeriod", props.bestBeforePeriod) end
         if props.bestBeforeDecay then setXMLFloat(xmlFile, key .. "#bestBeforeDecay", props.bestBeforeDecay) end
+
+        if props.maxTemperature then setXMLInt(xmlFile, key .. "#maxTemperature", props.maxTemperature) end
+        if props.maxTemperatureDecay then setXMLFloat(xmlFile, key .. "#maxTemperatureDecay", props.maxTemperatureDecay) end
+
+        if props.minTemperature then setXMLInt(xmlFile, key .. "#minTemperature", props.minTemperature) end
+        if props.minTemperatureDecay then setXMLFloat(xmlFile, key .. "#minTemperatureDecay", props.minTemperatureDecay) end
+
         i = i + 1
     end
 
@@ -449,12 +458,20 @@ function ShelterMatters:loadConfig()
         local wetnessDecay = getXMLFloat(xmlFile, key .. "#wetnessDecay")
         local bestBeforePeriod = getXMLInt(xmlFile, key .. "#bestBeforePeriod")
         local bestBeforeDecay = getXMLFloat(xmlFile, key .. "#bestBeforeDecay")
+        local maxTemperature = getXMLInt(xmlFile, key .. "#maxTemperature")
+        local maxTemperatureDecay = getXMLFloat(xmlFile, key .. "#maxTemperatureDecay")
+        local minTemperature = getXMLInt(xmlFile, key .. "#minTemperature")
+        local minTemperatureDecay = getXMLFloat(xmlFile, key .. "#minTemperatureDecay")
 
         self.decayProperties[fillType] = {
             wetnessImpact = wetnessImpact,
             wetnessDecay = wetnessDecay,
             bestBeforePeriod = bestBeforePeriod,
             bestBeforeDecay = bestBeforeDecay,
+            maxTemperature = maxTemperature,
+            maxTemperatureDecay = maxTemperatureDecay,
+            minTemperature = minTemperature,
+            minTemperatureDecay = minTemperatureDecay
         }
 
         i = i + 1

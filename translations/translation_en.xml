@@ -20,6 +20,7 @@
         <text name="SM_InfoBestBeforeInYears"           text="%s in %d years"/>
         <text name="SM_InfoExpired"                     text="Expired"/>
         <text name="SM_InfoDecay"                       text="Decay"/>
+        <text name="SM_InfoTemperature"                 text="Temperature"/>
         <text name="SM_InfoWetness"                     text="Wetness"/>
         <text name="SM_InfoWetness_1"                   text="Dry"/>
         <text name="SM_InfoWetness_2"                   text="Slightly Moist"/>

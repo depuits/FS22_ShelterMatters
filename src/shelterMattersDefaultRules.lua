@@ -33,6 +33,12 @@ function ShelterMattersDefaultRules.loadDefaultDecayProperties()
         wetnessImpact = 0.8,  -- **Fresh grass has moisture**, absorbs rain more slowly
         wetnessDecay = 6000  -- **Decays the fastest when wet**
     })
+    ShelterMattersDefaultRules.addDecayProperties(list, "GRASS_WINDROW", {
+        bestBeforePeriod = 3,  -- **Short shelf life (months)**
+        bestBeforeDecay = 3000, -- Heavy decay after best-before period
+        wetnessImpact = 0.8,  -- **Fresh grass has moisture**, absorbs rain more slowly
+        wetnessDecay = 6000  -- **Decays the fastest when wet**
+    })
     ShelterMattersDefaultRules.addDecayProperties(list, "COTTON", {
         wetnessImpact = 1.5,
         wetnessDecay = 1000

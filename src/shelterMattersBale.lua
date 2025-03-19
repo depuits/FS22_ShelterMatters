@@ -124,6 +124,16 @@ function Bale:isAffectedByWetness()
         self.wrappingState ~= 1 -- wrapped bales don't get wet
 end
 
+function Bale:isAffectedByTemperature()
+    -- only things with a decay rate are affected by wetness
+    local decayProps = self:getDecayProperties()
+
+    return decayProps and ( -- should have decay properties defined
+        ( decayProps.maxTemperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
+        ( decayProps.minTemperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
+    )
+end
+
 function Bale:getFillLevelFull()
     local currentFillLevel = self.fillLevel
 
@@ -191,10 +201,11 @@ function Bale:addDecayAmount(decayAmount)
     self:setDecayAmount(self.decayAmount + decayAmount)
     self:setFillLevel(self.fillLevel - decayAmount)
 
-    self:setReducedComponentMass(false) --TODO test if this recalculates mass or if we should also change the self.defaultMass
-    -- local fillTypeInfo = self:getFillTypeInfo(self.fillType)
-    -- fillTypeInfo.mass, fillTypeInfo.capacity
-    -- setMass(self.nodeId, fillTypeInfo.mass)
+    local fillTypeInfo = self:getFillTypeInfo(self.fillType)
+    if fillTypeInfo ~= nil then
+        local massProc = self.fillLevel / fillTypeInfo.capacity
+        setMass(self.nodeId, fillTypeInfo.mass * massProc)
+    end
 
     if self.fillLevel <= 0 then
         self:delete()
