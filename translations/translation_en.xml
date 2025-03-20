@@ -21,6 +21,8 @@
         <text name="SM_InfoExpired"                     text="Expired"/>
         <text name="SM_InfoDecay"                       text="Decay"/>
         <text name="SM_InfoTemperature"                 text="Temperature"/>
+        <text name="SM_InfoMax"                         text="Max"/>
+        <text name="SM_InfoMin"                         text="Min"/>
         <text name="SM_InfoWetness"                     text="Wetness"/>
         <text name="SM_InfoWetness_1"                   text="Dry"/>
         <text name="SM_InfoWetness_2"                   text="Slightly Moist"/>

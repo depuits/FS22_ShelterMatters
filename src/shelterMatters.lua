@@ -70,6 +70,8 @@ ShelterMatters.decayProperties = {
     ]]--
 }
 
+ShelterMatters.vehicles = {}
+
 addModEventListener(ShelterMatters)
 
 function ShelterMatters.log(message, ...)
@@ -94,6 +96,9 @@ function ShelterMatters:loadMap(name)
 
     ConstructionScreen.setBrush = Utils.appendedFunction(ConstructionScreen.setBrush, self.indoorAreasShow)
     ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, self.indoorAreasHide)
+
+    --local abstractClass = PlaceableObjectStorage.ABSTRACT_OBJECTS_BY_CLASS_NAME['Vehicle']
+    --DebugUtil.printTableRecursively(abstractClass, "abstractClass: ", 0, 3)
 end
 
 function ShelterMatters.loadSettingsFromServer()
@@ -200,6 +205,7 @@ function ShelterMatters:update(dt)
 
     -- Apply the damages to bales left outside 
     self:updateAllBales()
+    self:updateAllVehicles()
 
     -- Get the current in-game time in hours
     local currentInGameHours = g_currentMission.environment.dayTime / (60 * 60 * 1000) -- ms to hours
@@ -239,8 +245,14 @@ function ShelterMatters:updateAllBales()
     for _, saveItem in pairs(g_currentMission.itemSystem.itemsToSave) do
         -- Check if the object is a bale by checking its class name
         if saveItem.className == "Bale" then
-            ShelterMattersBale.update(saveItem.item)
+            ShelterMattersObjectDecayFunctions.update(saveItem.item)
         end
+    end
+end
+
+function ShelterMatters:updateAllVehicles()
+    for _, vehicle in ipairs(ShelterMatters.vehicles) do
+        ShelterMattersObjectDecayFunctions.update(vehicle)
     end
 end
 
@@ -623,5 +635,16 @@ function ShelterMatters:smToggleShelterStatusIcon()
     end
 
     self.hideShelterStatusIcon = not self.hideShelterStatusIcon
+    ShelterMattersSyncEvent.sendToClients()
+end
+
+addConsoleCommand("smResetDecayProperties", "Reset all decay properties to the mods defaults", "smResetDecayProperties", ShelterMatters)
+function ShelterMatters:smResetDecayProperties()
+    if not g_currentMission:getIsServer() then
+        print("Changes can only be done on the server.")
+        return
+    end
+
+    self.decayProperties = ShelterMattersDefaultRules.loadDefaultDecayProperties()
     ShelterMattersSyncEvent.sendToClients()
 end

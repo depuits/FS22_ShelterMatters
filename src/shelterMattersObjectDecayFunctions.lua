@@ -24,7 +24,7 @@ function ShelterMattersObjectDecayFunctions.update(object)
     local elapsedInMinutes = elapsedTime / (60 * 1000) -- Convert from ms to minutes
 
     -- only execute the update logic once every ingame minute
-    if elapsedInMinutes > 1 then
+    if elapsedInMinutes < 1 then
         return
     end
 
@@ -64,8 +64,8 @@ function ShelterMattersObjectDecayFunctions.update(object)
         -- update decay by wetness
         if object:getWetness() > 0 then -- only if the object is wet then it will decay
             local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
-            local wetnessDamage = (decayPerMinute * elapsedInMinutes) * object:getWetness()
-            object:addDecayAmount(wetnessDamage)
+            local damageWetness = (decayPerMinute * elapsedInMinutes) * object:getWetness()
+            object:addDecayAmount(damageWetness)
         end
     end
 
@@ -74,29 +74,29 @@ function ShelterMattersObjectDecayFunctions.update(object)
         local temperature = g_currentMission.environment.weather:getCurrentTemperature()
 
         -- max tempertature decay
-        if decayProps.maxTemperature and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0 then
+        if decayProps.maxTemperature ~= nil and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 then
             inShed = ShelterMatters.isObjectInShed(object, inShed)
             if not inShed then -- only if the object is not inside it will decay
                 local decayPerMinute = decayProps.maxTemperatureDecay / 60
-                local wetnessDamage = (decayPerMinute * elapsedInMinutes)
-                object:addDecayAmount(wetnessDamage)
+                local damageMaxTemp = (decayPerMinute * elapsedInMinutes)
+                object:addDecayAmount(damageMaxTemp)
             end
         end
 
         -- min temperature decay
-        if decayProps.minTemperature and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0 then
+        if decayProps.minTemperature ~= nil and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 then
             inShed = ShelterMatters.isObjectInShed(object, inShed)
             if not inShed then -- only if the object is not inside it will decay
                 local decayPerMinute = decayProps.minTemperatureDecay / 60
-                local wetnessDamage = (decayPerMinute * elapsedInMinutes)
-                object:addDecayAmount(wetnessDamage)
+                local damageMinTemp = (decayPerMinute * elapsedInMinutes)
+                object:addDecayAmount(damageMinTemp)
             end
         end
     end
 
     -- update bestBefore
     local bb = object:getBestBefore()
-    if bb and bb.month < g_currentMission.environment.currentPeriod and bb.year <= g_currentMission.environment.currentYear then
+    if bb ~= nil and bb.month < g_currentMission.environment.currentPeriod and bb.year <= g_currentMission.environment.currentYear then
         local elapsedDecayInMinutes = elapsedInMinutes -- decay from lastupdate
         -- unless the last update is from before the best before date
         if ShelterMattersHelpers.isLastUpdateBefore(elapsedInMinutes, bb.month, bb.year) then
@@ -117,22 +117,27 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     local bb = object:getBestBefore()
     ShelterMattersHelpers.infoBoxAddBestBefore(box, bb)
 
+    local decayProps = object:getDecayProperties()
+
     -- display wetness in info box
-    if ShelterMattersObjectDecayFunctions.shouldDisplayWetness(object) then
+    if decayProps ~= nil and -- should have decay properties defined
+        decayProps.wetnessImpact ~= nil and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
+        decayProps.wetnessDecay ~= nil and decayProps.wetnessDecay > 0 -- and there must also be a decay from the wetness
+    then
         ShelterMattersHelpers.infoBoxAddWetness(box, object:getWetness())
     end
 
     -- display temperature in info box
-    local hasMaxTemp = decayProps and decayProps.maxTemperature and decayProps.maxTemperatureDecay > 0
-    local hasMinTemp = decayProps and decayProps.minTemperature and decayProps.minTemperatureDecay > 0
+    local decayProps = object:getDecayProperties()
+    local hasMaxTemp = decayProps ~= nil and decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0
+    local hasMinTemp = decayProps ~= nil and decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0
 
-    -- TODO show range (see localization eg celcius and farenheit)
     if hasMaxTemp and hasMinTemp then
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%d - %d", decayProps.maxTemperature, decayProps.maxTemperature))
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s - %s", g_i18n:formatTemperature(decayProps.minTemperature, 0), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
     elseif hasMaxTemp then
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("Lower then %d", decayProps.maxTemperature))
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMax"), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
     elseif hasMinTemp then
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("Higher then %d", decayProps.maxTemperature))
+        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMin"), g_i18n:formatTemperature(decayProps.minTemperature, 0)))
     end
 
     -- display decay in info box
@@ -145,15 +150,6 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     if decayPercentage > 0 then
         box:addLine(g_i18n:getText("SM_InfoDecay"), string.format("%d%%", decayPercentage * 100))
     end
-end
-
-function ShelterMattersObjectDecayFunctions.shouldDisplayWetness(object)
-    -- only things with a decay rate are affected by wetness
-    local decayProps = object:getDecayProperties()
-
-    return decayProps and -- should have decay properties defined
-        decayProps.wetnessImpact and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
-        decayProps.wetnessDecay and decayProps.wetnessDecay > 0 -- and there must also be a decay from the wetness
 end
 
 -----------------------------------
@@ -181,14 +177,14 @@ function ShelterMattersObjectDecayFunctions.initObject(self, spec)
     spec.wetness = 0
     spec.wetnessDirtyFlag = self:getNextDirtyFlag()
 
-    spec.decayAmount = 0
-    spec.decayAmountDirtyFlag = self:getNextDirtyFlag()
-
     spec.fillLevelFull = 0
     spec.fillLevelFullDirtyFlag = self:getNextDirtyFlag()
 
+    spec.decayAmount = 0
+    spec.decayAmountDirtyFlag = self:getNextDirtyFlag()
+    
     spec.bestBeforeDirtyFlag = self:getNextDirtyFlag()
-
+    
     -- following are set dynamicly if not yet defined
     -- spec.spawnTime, spec.bestBefore
 end
@@ -202,8 +198,9 @@ function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
     spec.bestBefore = { month = xmlFile:getValue(key .. ".bestBefore#month"), year = xmlFile:getValue(key .. ".bestBefore#year") }
 
     spec.wetness = xmlFile:getValue(key .. "#wetness", 0)
-    spec.decayAmount = xmlFile:getValue(key .. "#decayAmount", 0)
     spec.fillLevelFull = xmlFile:getValue(key .. "#fillLevelFull", 0)
+
+    spec.decayAmount = xmlFile:getValue(key .. "#decayAmount", 0)
 
     -- reset the spawnTime and bestBefore if not all properties or correctly set
     -- this to prevent errors and saving nil values in the feature
@@ -217,24 +214,24 @@ function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
 end
 
 function ShelterMattersObjectDecayFunctions.saveToXMLFile(xmlFile, key, spec)
-    if spec.lastUpdate then -- it is posible that a bale was never updated if this mod is added to an existing savegame
+    if spec.lastUpdate ~= nil then -- it is posible that a bale was never updated if this mod is added to an existing savegame
         xmlFile:setValue(key .. ".lastUpdate#day", spec.lastUpdate.day)
         xmlFile:setValue(key .. ".lastUpdate#time", spec.lastUpdate.time)
     end
 
-    if spec.spawnTime then
+    if spec.spawnTime ~= nil then
         xmlFile:setValue(key .. ".spawnTime#day", spec.spawnTime.day)
         xmlFile:setValue(key .. ".spawnTime#time", spec.spawnTime.time)
     end
 
-    if spec.bestBefore then
+    if spec.bestBefore ~= nil then
         xmlFile:setValue(key .. ".bestBefore#month", spec.bestBefore.month)
         xmlFile:setValue(key .. ".bestBefore#year", spec.bestBefore.year)
     end
 
     xmlFile:setValue(key .. "#wetness", spec.wetness)
-    xmlFile:setValue(key .. "#decayAmount", spec.decayAmount)
     xmlFile:setValue(key .. "#fillLevelFull", spec.fillLevelFull)
+    xmlFile:setValue(key .. "#decayAmount", spec.decayAmount)
 end
 
 --------------------------------

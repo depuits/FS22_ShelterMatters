@@ -77,11 +77,6 @@ end
 ------------------------
 -- Gameplay functions --
 ------------------------
-
-function ShelterMattersBale.update(bale)
-    ShelterMattersObjectDecayFunctions.update(bale)
-end
-
 function ShelterMattersBale:showInfo(box)
     ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, self)
 end
@@ -118,9 +113,9 @@ function Bale:isAffectedByWetness()
     -- only things with a decay rate are affected by wetness
     local decayProps = self:getDecayProperties()
 
-    return decayProps and -- should have decay properties defined
-        decayProps.wetnessImpact and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
-        decayProps.wetnessDecay and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
+    return decayProps ~= nil and -- should have decay properties defined
+        decayProps.wetnessImpact ~= nil and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
+        decayProps.wetnessDecay ~= nil and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
         self.wrappingState ~= 1 -- wrapped bales don't get wet
 end
 
@@ -128,9 +123,9 @@ function Bale:isAffectedByTemperature()
     -- only things with a decay rate are affected by wetness
     local decayProps = self:getDecayProperties()
 
-    return decayProps and ( -- should have decay properties defined
-        ( decayProps.maxTemperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
-        ( decayProps.minTemperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
+    return decayProps ~= nil and ( -- should have decay properties defined
+        ( decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
+        ( decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
     )
 end
 
@@ -154,16 +149,16 @@ function Bale:setFillLevelFull(fillLevelFull)
 end
 
 function Bale:getBestBefore()
-    if self.bestBefore then
+    if self.bestBefore ~= nil then
         return self.bestBefore
     end
 
     local decayProps = self:getDecayProperties()
     
     -- if type bestBeforePeriod or bestBeforeDecay not defined then return nil
-    if decayProps and 
-        decayProps.bestBeforePeriod and decayProps.bestBeforePeriod > 0 and 
-        decayProps.bestBeforeDecay and decayProps.bestBeforeDecay > 0 
+    if decayProps ~= nil and 
+        decayProps.bestBeforePeriod ~= nil and decayProps.bestBeforePeriod > 0 and 
+        decayProps.bestBeforeDecay ~= nil and decayProps.bestBeforeDecay > 0 
     then
         local month = g_currentMission.environment.currentPeriod + decayProps.bestBeforePeriod -- 1 (March) to 12 (Feb)
         local year = g_currentMission.environment.currentYear
@@ -184,7 +179,7 @@ function Bale:setBestBefore(bestBefore)
     self.bestBefore = bestBefore
 
     -- if the bestbefore is not valid then we clear it
-    if not bestBefore or bestBefore.month == nil or bestBefore.year == nil then
+    if bestBefore == nil or bestBefore.month == nil or bestBefore.year == nil then
         self.bestBefore = nil
     end
 

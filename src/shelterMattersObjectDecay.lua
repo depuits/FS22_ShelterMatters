@@ -12,7 +12,7 @@ end
 
 function ShelterMattersObjectDecay.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onLoad", ShelterMattersObjectDecay)
-    SpecializationUtil.registerEventListener(vehicleType, "onUpdate", ShelterMattersObjectDecay)
+    SpecializationUtil.registerEventListener(vehicleType, "onDelete", ShelterMattersObjectDecay)
 
     SpecializationUtil.registerEventListener(vehicleType, "onReadStream", ShelterMattersObjectDecay)
     SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", ShelterMattersObjectDecay)
@@ -58,6 +58,8 @@ function ShelterMattersObjectDecay.initSpecialization()
 end
 
 function ShelterMattersObjectDecay:onLoad(savegame)
+    table.insert(ShelterMatters.vehicles, self) -- save to vehicle list to update
+
     local spec = self[ShelterMattersObjectDecay.SPEC_TABLE_NAME]
 
     ShelterMattersObjectDecayFunctions.initObject(self, spec)
@@ -68,6 +70,16 @@ function ShelterMattersObjectDecay:onLoad(savegame)
     end 
 end
 
+function ShelterMattersObjectDecay:onDelete()
+    -- remove object from vehicle list
+    for i, vehicle in ipairs(ShelterMatters.vehicles) do
+        if vehicle == self then
+            table.remove(ShelterMatters.vehicles, i)
+            break
+        end
+    end
+end
+
 function ShelterMattersObjectDecay:saveToXMLFile(xmlFile, key, usedModNames)
     local spec = self[ShelterMattersObjectDecay.SPEC_TABLE_NAME]
     ShelterMattersObjectDecayFunctions.saveToXMLFile(xmlFile, key, spec)
@@ -76,16 +88,17 @@ end
 ------------------------
 -- Gameplay functions --
 ------------------------
-
-function ShelterMattersObjectDecay:onUpdate(dt) 
-    ShelterMattersObjectDecayFunctions.update(self)
-end
-
 function ShelterMattersObjectDecay:showInfo(superFunc, box)
     -- debugging stuff
     box:addLine("type", tostring(self.typeName))
+    local fillTypeIndex = self:getFillUnitFillType(1) -- Assume single fill unit for pallets
+    box:addLine("fill", tostring(g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex)))
+    local spec = self[ShelterMattersObjectDecay.SPEC_TABLE_NAME]
+    box:addLine("tempDecay", tostring(spec.tempDecay))
+
     box:addLine("getIsPallet", tostring(self:getIsPallet()))
     box:addLine("isAffectedByWetness", tostring(self:isAffectedByWetness()))
+    --box:addLine("isAffectedByTemperature", tostring(self:isAffectedByTemperature()))
     box:addLine("isAffectedByWeather", tostring(self:isAffectedByWeather()))
     box:addLine("isCoverClosed", tostring(self:getIsCoverClosed()))
 
@@ -168,9 +181,9 @@ function ShelterMattersObjectDecay:isAffectedByWetness()
     -- only things with a decay rate are affected by wetness
     local decayProps = self:getDecayProperties()
 
-    return decayProps and -- should have decay properties defined
-        decayProps.wetnessImpact and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
-        decayProps.wetnessDecay and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
+    return decayProps ~= nil and -- should have decay properties defined
+        decayProps.wetnessImpact ~= nil and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
+        decayProps.wetnessDecay ~= nil and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
         self:getIsPallet() -- currently only pallets are affected we'll want to expand this in the future to also include trailers etc
 end
 
@@ -178,9 +191,9 @@ function ShelterMattersObjectDecay:isAffectedByTemperature()
     -- only things with a decay rate are affected by wetness
     local decayProps = self:getDecayProperties()
 
-    return decayProps and ( -- should have decay properties defined
-        ( decayProps.maxTemperature and decayProps.maxTemperatureDecay and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
-        ( decayProps.minTemperature and decayProps.minTemperatureDecay and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
+    return decayProps ~= nil and ( -- should have decay properties defined
+        ( decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
+        ( decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
     ) and self:getIsPallet() -- and currently only pallets are affected we'll want to expand this in the future to also include trailers etc
 end
 
@@ -218,16 +231,16 @@ end
 
 function ShelterMattersObjectDecay:getBestBefore()
     local spec = self[ShelterMattersObjectDecay.SPEC_TABLE_NAME]
-    if spec.bestBefore then
+    if spec.bestBefore ~= nil then
         return spec.bestBefore
     end
 
     local decayProps = self:getDecayProperties()
     
     -- if type bestBeforePeriod or bestBeforeDecay not defined then return nil
-    if decayProps and 
-        decayProps.bestBeforePeriod and decayProps.bestBeforePeriod > 0 and 
-        decayProps.bestBeforeDecay and decayProps.bestBeforeDecay > 0 
+    if decayProps ~= nil and 
+        decayProps.bestBeforePeriod ~= nil and decayProps.bestBeforePeriod > 0 and 
+        decayProps.bestBeforeDecay ~= nil and decayProps.bestBeforeDecay > 0 
     then
         local month = g_currentMission.environment.currentPeriod + decayProps.bestBeforePeriod -- 1 (March) to 12 (Feb)
         local year = g_currentMission.environment.currentYear
@@ -248,7 +261,7 @@ function ShelterMattersObjectDecay:setBestBefore(bestBefore)
     spec.bestBefore = bestBefore
 
     -- if the bestbefore is not valid then we clear it
-    if not bestBefore or bestBefore.month == nil or bestBefore.year == nil then
+    if bestBefore == nil or bestBefore.month == nil or bestBefore.year == nil then
         spec.bestBefore = nil
     end
 
@@ -266,9 +279,8 @@ function ShelterMattersObjectDecay:addDecayAmount(decayAmount)
 
     local fillTypeIndex = self:getFillUnitFillType(1)
     self:addFillUnitFillLevel(self:getOwnerFarmId(), 1, decayAmount * -1, fillTypeIndex, ToolType.UNDEFINED, nil)
--- TODO test if this is needed for pallets and fix if so
+-- TODO do we want a popup on pallets decayed? or a more generic items are decaying
 --[[    if self.fillLevel <= 0 then
-        self:delete()
         shelterMattersBaleDecayedEvent.showDecayedNotification(self:getOwnerFarmId(), self:getFillType())
         -- send event to display popup on clients
         g_server:broadcastEvent(shelterMattersBaleDecayedEvent.new(self))
