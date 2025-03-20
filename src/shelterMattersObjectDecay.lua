@@ -90,20 +90,11 @@ end
 ------------------------
 function ShelterMattersObjectDecay:showInfo(superFunc, box)
     -- debugging stuff
-    box:addLine("type", tostring(self.typeName))
-    local fillTypeIndex = self:getFillUnitFillType(1) -- Assume single fill unit for pallets
-    box:addLine("fill", tostring(g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex)))
-    local spec = self[ShelterMattersObjectDecay.SPEC_TABLE_NAME]
-    box:addLine("tempDecay", tostring(spec.tempDecay))
-
-    box:addLine("getIsPallet", tostring(self:getIsPallet()))
-    box:addLine("isAffectedByWetness", tostring(self:isAffectedByWetness()))
+ --[[   box:addLine("type", tostring(self.typeName))
+    --box:addLine("isAffectedByWetness", tostring(self:isAffectedByWetness()))
     --box:addLine("isAffectedByTemperature", tostring(self:isAffectedByTemperature()))
     box:addLine("isAffectedByWeather", tostring(self:isAffectedByWeather()))
     box:addLine("isCoverClosed", tostring(self:getIsCoverClosed()))
-
-    local inShed = ShelterMatters.isObjectInShed(self)
-    box:addLine("inShed", tostring(inShed))
 
     local spawnTime = self:getSpawnTime()
     if spawnTime ~= nil then
@@ -117,9 +108,9 @@ function ShelterMattersObjectDecay:showInfo(superFunc, box)
         else
             box:addLine("spawnProtection", "false")
         end
-    end
+    end]]
     -- debug spec rendering
-    ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
+    --ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
 
     ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, self)
 
