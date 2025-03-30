@@ -19,7 +19,7 @@ function ShelterMattersObjectDecay.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onReadUpdateStream", ShelterMattersObjectDecay)
     SpecializationUtil.registerEventListener(vehicleType, "onWriteUpdateStream", ShelterMattersObjectDecay)
 
-    -- onFillUnitFillLevelChanged --TODO use to reset bestBeforeDate and fillLevelFull
+    SpecializationUtil.registerEventListener(vehicleType, "onFillUnitFillLevelChanged", ShelterMattersObjectDecay)
 end
 
 function ShelterMattersObjectDecay.registerFunctions(vehicleType)
@@ -110,7 +110,7 @@ function ShelterMattersObjectDecay:showInfo(superFunc, box)
         end
     end]]
     -- debug spec rendering
-    --ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
+    ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
 
     ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, self)
 
@@ -347,6 +347,11 @@ function ShelterMattersObjectDecay:getIsCoverClosed()
     return false -- If it's an open trailer, decay should still apply
 end
 
+function ShelterMattersObjectDecay:onFillUnitFillLevelChanged(fillUnitIndex, fillLevelDelta, fillTypeIndex, toolType, fillPositionData, appliedDelta)
+    --TODO use to reset bestBeforeDate and fillLevelFull
+        local fillTypeName = Utils.getNoNil(g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), "NA")
+    print("Filldelta: " .. tostring(fillUnitIndex) .. ": " .. fillTypeName .. " - " .. tostring(self:getFillUnitFillLevel(fillUnitIndex)) .. " (" .. tostring(fillLevelDelta)..")")
+end
 --------------------------------
 -- multiplayer sync functions --
 --------------------------------
