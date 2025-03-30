@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+  <!-- Background Panel -->
+    <GuiElement id="background" type="ImageElement" size="1 1" imageSize="1 1" imageColor="0 0 0 0.8"/>
+
+    <!-- Title -->
+    <GuiElement id="title" type="text" size="0.4 0.1" position="0.3 0.9" text="ShelterMatters Settings" textSize="2" />
+
+    <!-- Checkbox: Hide Shelter Status Icon -->
+    <GuiElement id="hideShelterStatusIcon" type="checkedOption" size="0.05 0.05" position="0.2 0.75"/>
+    <GuiElement id="hideShelterStatusIconLabel" type="text" size="0.4 0.05" position="0.25 0.75" text="Hide Shelter Status Icon"/>
+
+    <!-- Input: Pallet Spawn Protection (Hours) -->
+    <GuiElement id="palletSpawnProtectionLabel" type="text" size="0.4 0.05" position="0.2 0.65" text="Pallet Spawn Protection (hours)"/>
+    <GuiElement id="palletSpawnProtection" type="EditBox" size="0.1 0.05" position="0.6 0.65"/>
+
+    <!-- Weather Multipliers Section -->
+<!--     <GuiElement id="weatherMultipliersLabel" type="text" size="0.4 0.05" position="0.2 0.55" text="Weather Multipliers"/>
+    <GuiElement id="weatherRainMultiplier" type="EditBox" size="0.1 0.05" position="0.6 0.50" />
+    <GuiElement id="weatherRainMultiplierLabel" type="text" size="0.4 0.05" position="0.2 0.50" text="Rain Multiplier"/> -->
+
+    <!-- Damage Rates -->
+<!--     <GuiElement id="damageRatesLabel" type="text" size="0.4 0.05" position="0.2 0.40" text="Damage Rates"/>
+    <GuiElement id="damageRateGeneral" type="EditBox" size="0.1 0.05" position="0.6 0.35" />
+    <GuiElement id="damageRateGeneralLabel" type="text" size="0.4 0.05" position="0.2 0.35" text="General Damage Rate"/> -->
+
+    <!-- Weather Wetness Rates -->
+<!--     <GuiElement id="weatherWetnessRatesLabel" type="text" size="0.4 0.05" position="0.2 0.25" text="Weather Wetness Rates"/>
+    <GuiElement id="wetnessFog" type="EditBox" size="0.1 0.05" position="0.6 0.20" />
+    <GuiElement id="wetnessFogLabel" type="text" size="0.4 0.05" position="0.2 0.20" text="Fog Wetness"/> -->
+
+    <!-- Buttons -->
+    <GuiElement id="saveButton" type="Button" size="0.2 0.05" position="0.3 0.1" text="Save" />
+    <GuiElement id="cancelButton" type="Button" size="0.2 0.05" position="0.55 0.1" text="Cancel" />
+
+</GUI>

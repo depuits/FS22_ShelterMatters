@@ -126,6 +126,9 @@ Changelog v1.1.0.0
         <sourceFile filename="src/shelterMattersObjectDecayFunctions.lua"/>
         <sourceFile filename="src/shelterMattersDefaultRules.lua"/>
         <sourceFile filename="src/injectSpecialization.lua"/>
+
+        <sourceFile filename="src/gui/shelterMattersSettings.lua"/>
+        <sourceFile filename="src/playerExtension.lua"/>
     </extraSourceFiles>
 
     <specializations>
@@ -153,4 +156,13 @@ Changelog v1.1.0.0
         <storeItem xmlFilename="indoorAreas/indoorAreaRectangle10x50.xml"/>
         <storeItem xmlFilename="indoorAreas/indoorAreaRectangle25x50.xml"/>
     </storeItems>
+
+    <actions>
+        <action name="OPEN_SHELTER_MATTERS_SETTINGS" axisType="HALF" />
+        <inputBinding>
+            <actionBinding action="OPEN_SHELTER_MATTERS_SETTINGS">
+                <binding device="KB_MOUSE_DEFAULT" input="KEY_rctrl KEY_s" />
+            </actionBinding>
+        </inputBinding>
+    </actions>
 </modDesc>

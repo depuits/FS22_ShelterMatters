@@ -29,5 +29,7 @@
         <text name="SM_InfoWetness_3"                   text="Damp"/>
         <text name="SM_InfoWetness_4"                   text="Wet"/>
         <text name="SM_InfoWetness_5"                   text="Soaking Wet"/>
+
+        <text name="input_OPEN_SHELTER_MATTERS_SETTINGS" text="Sheltermatters settings"/>
     </texts>
 </l10n>
