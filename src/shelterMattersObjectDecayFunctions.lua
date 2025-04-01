@@ -60,13 +60,13 @@ function ShelterMattersObjectDecayFunctions.update(object)
                 object:setWetness(object:getWetness() + (wetnessRate * decayProps.wetnessImpact * elapsedInMinutes))
             end
         end
+    end
 
-        -- update decay by wetness
-        if object:getWetness() > 0 then -- only if the object is wet then it will decay
-            local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
-            local damageWetness = (decayPerMinute * elapsedInMinutes) * object:getWetness()
-            object:addDecayAmount(damageWetness)
-        end
+    -- update decay by wetness
+    if object:getWetness() > 0 then -- only if the object is wet then it will decay
+        local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
+        local damageWetness = (decayPerMinute * elapsedInMinutes) * object:getWetness()
+        object:addDecayAmount(damageWetness)
     end
 
     -- update temperature impact
@@ -120,24 +120,23 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     local decayProps = object:getDecayProperties()
 
     -- display wetness in info box
-    if decayProps ~= nil and -- should have decay properties defined
-        decayProps.wetnessImpact ~= nil and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
-        decayProps.wetnessDecay ~= nil and decayProps.wetnessDecay > 0 -- and there must also be a decay from the wetness
-    then
+    if object:getWetness() > 0 or object:isAffectedByWetness() then
         ShelterMattersHelpers.infoBoxAddWetness(box, object:getWetness())
     end
 
     -- display temperature in info box
-    local decayProps = object:getDecayProperties()
-    local hasMaxTemp = decayProps ~= nil and decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0
-    local hasMinTemp = decayProps ~= nil and decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0
+    if object:isAffectedByWetness() then
+        local decayProps = object:getDecayProperties()
+        local hasMaxTemp = decayProps ~= nil and decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0
+        local hasMinTemp = decayProps ~= nil and decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0
 
-    if hasMaxTemp and hasMinTemp then
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s - %s", g_i18n:formatTemperature(decayProps.minTemperature, 0), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
-    elseif hasMaxTemp then
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMax"), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
-    elseif hasMinTemp then
-        box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMin"), g_i18n:formatTemperature(decayProps.minTemperature, 0)))
+        if hasMaxTemp and hasMinTemp then
+            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s - %s", g_i18n:formatTemperature(decayProps.minTemperature, 0), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
+        elseif hasMaxTemp then
+            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMax"), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
+        elseif hasMinTemp then
+            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMin"), g_i18n:formatTemperature(decayProps.minTemperature, 0)))
+        end
     end
 
     -- display decay in info box

@@ -175,7 +175,7 @@ function ShelterMattersObjectDecay:isAffectedByWetness()
     return decayProps ~= nil and -- should have decay properties defined
         decayProps.wetnessImpact ~= nil and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
         decayProps.wetnessDecay ~= nil and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
-        self:getIsPallet() -- currently only pallets are affected we'll want to expand this in the future to also include trailers etc
+        self:isAffectedByWeather() -- here we check if it is a pallet or other affected vehicle
 end
 
 function ShelterMattersObjectDecay:isAffectedByTemperature()
@@ -185,7 +185,7 @@ function ShelterMattersObjectDecay:isAffectedByTemperature()
     return decayProps ~= nil and ( -- should have decay properties defined
         ( decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
         ( decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
-    ) and self:getIsPallet() -- and currently only pallets are affected we'll want to expand this in the future to also include trailers etc
+    ) and self:isAffectedByWeather() -- here we check if it is a pallet or other affected vehicle
 end
 
 function ShelterMattersObjectDecay:getFillLevelFull()
@@ -296,20 +296,15 @@ function ShelterMattersObjectDecay:getDecayProperties()
 end
 
 function ShelterMattersObjectDecay:isAffectedByWeather()
-    -- Pallets and bigbags are affected, treeSaplingPallets are not affected
+    -- Pallets and bigbags are always affected
     if self:getIsPallet() then
         return true
     end
 
-    -- Check if the vehicle has a cover, all trailers have the cover spec
-    if self.spec_cover then
-        -- Check if the vehicle is a known closed tanker/container
-        -- TODO get from config and refine
-        if self.typeName == "tankerTrailer" or self.typeName == "liquidTrailer" or self.typeName == "waterTrailer" then
-            return false
-        end
-
-        return self:getIsCoverClosed()
+    -- Check if the vehicle has the required specs matching and no type exclude
+    if ShelterMattersObjectDecay.hasMatchingSpecializations(self) then
+        -- if it meets those criteria then we check if the cover is closed
+        return not self:getIsCoverClosed()
     end
 
     return false -- all other items are not affected
@@ -317,6 +312,46 @@ end
 
 function ShelterMattersObjectDecay:getIsPallet()
     return SpecializationUtil.hasSpecialization(Pallet, self.specializations)
+end
+
+function ShelterMattersObjectDecay.hasSpecialization(specName, specializations)
+    for _, spec in pairs(specializations) do
+        if spec.className == specName then
+            return true
+        end
+    end
+
+    return false
+end
+
+function ShelterMattersObjectDecay.hasMatchingSpecializations(vehicle)
+    -- Ensure the vehicle and specializations exist
+    if vehicle == nil or vehicle.specializations == nil then
+        return false
+    end
+
+    -- Check required specializations
+    for _, specName in ipairs(ShelterMatters.weatherAffectedSpecs) do
+        if not ShelterMattersObjectDecay.hasSpecialization(specName, vehicle.specializations) then
+            return false -- If a required spec is missing, return false
+        end
+    end
+
+    -- Check excluded specializations
+    for _, specName in ipairs(ShelterMatters.weatherExcludedSpecs) do
+        if ShelterMattersObjectDecay.hasSpecialization(specName, vehicle.specializations) then
+            return false -- If an excluded spec is found, return false
+        end
+    end
+
+    -- Check excluded types
+    for _, typeName in ipairs(ShelterMatters.weatherExcludedTypes) do
+        if vehicle.typeName == typeName then
+            return false -- If an excluded type is found, return false
+        end
+    end
+
+    return true -- If all required specs are present and none of the excluded specs exist, return true
 end
 
 function ShelterMattersObjectDecay:getIsCoverClosed()
@@ -339,18 +374,21 @@ function ShelterMattersObjectDecay:getIsCoverClosed()
         end
     end
 
-    -- Check if the vehicle is a known closed tanker/container
---[[    if self.typeName == "tankerTrailer" or self.typeName == "liquidTrailer" or self.typeName == "waterTrailer" then
-        return true
-    end]]
-
     return false -- If it's an open trailer, decay should still apply
 end
 
 function ShelterMattersObjectDecay:onFillUnitFillLevelChanged(fillUnitIndex, fillLevelDelta, fillTypeIndex, toolType, fillPositionData, appliedDelta)
-    --TODO use to reset bestBeforeDate and fillLevelFull
-        local fillTypeName = Utils.getNoNil(g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), "NA")
-    print("Filldelta: " .. tostring(fillUnitIndex) .. ": " .. fillTypeName .. " - " .. tostring(self:getFillUnitFillLevel(fillUnitIndex)) .. " (" .. tostring(fillLevelDelta)..")")
+    if fillTypeIndex ~= 1 then
+        -- we only care about fill index 1 at the moment. Multi index storage units are not checked.
+        return
+    end
+    local fillLevel = self:getFillUnitFillLevel(fillTypeIndex)
+    if fillLevel < 0.01 then -- we see this as good as empty
+        -- reset wetness, bestBeforeDate, and fillLevelFull when the vehicle is empty
+        self:setWetness(0)
+        self:setFillLevelFull(0)
+        self:setBestBefore(nil)
+    end
 end
 --------------------------------
 -- multiplayer sync functions --

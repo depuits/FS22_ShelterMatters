@@ -6,12 +6,15 @@ function ShelterMattersSyncEvent.emptyNew()
     return Event.new(ShelterMattersSyncEvent_mt)
 end
 
-function ShelterMattersSyncEvent.new(hideShelterStatusIcon, damageRates, weatherMultipliers, decayProperties)
+function ShelterMattersSyncEvent.new(hideShelterStatusIcon, damageRates, weatherMultipliers, decayProperties, weatherAffectedSpecs, weatherExcludedSpecs, weatherExcludedTypes)
     local self = ShelterMattersSyncEvent.emptyNew()
     self.hideShelterStatusIcon = hideShelterStatusIcon
     self.damageRates = damageRates
     self.weatherMultipliers = weatherMultipliers
     self.decayProperties = decayProperties
+    self.weatherAffectedSpecs = weatherAffectedSpecs
+    self.weatherExcludedSpecs = weatherExcludedSpecs
+    self.weatherExcludedTypes = weatherExcludedTypes
     return self
 end
 
@@ -57,6 +60,10 @@ function ShelterMattersSyncEvent:readStream(streamId, connection)
             self.decayProperties[fillType].bestBeforeDecay = streamReadFloat32(streamId)
         end
     end
+
+    self.weatherAffectedSpecs = self:readStringListFromStream(streamId)
+    self.weatherExcludedSpecs = self:readStringListFromStream(streamId)
+    self.weatherExcludedTypes = self:readStringListFromStream(streamId)
     
     self:run(connection)
 end
@@ -116,6 +123,33 @@ function ShelterMattersSyncEvent:writeStream(streamId, connection)
             streamWriteFloat32(streamId, props.bestBeforeDecay)
         end
     end
+
+    self:writeStringListToStream(streamId, self.weatherAffectedSpecs)
+    self:writeStringListToStream(streamId, self.weatherExcludedSpecs)
+    self:writeStringListToStream(streamId, self.weatherExcludedTypes)
+end
+
+function ShelterMattersSyncEvent:readStringListFromStream(streamId)
+    local list = {}
+    count = streamReadInt32(streamId)
+    for i = 1, count do
+        local value = streamReadString(streamId)
+        table.insert(list, value)
+    end
+
+    return list
+end
+
+function ShelterMattersSyncEvent:writeStringListToStream(streamId, list)
+    local propertiesCount = 0
+    for _ in ipairs(list) do
+        propertiesCount = propertiesCount + 1
+    end
+    streamWriteInt32(streamId, propertiesCount)
+
+    for _, value in ipairs(list) do
+        streamWriteString(streamId, value)
+    end
 end
 
 function ShelterMattersSyncEvent:run(connection)
@@ -128,10 +162,13 @@ function ShelterMattersSyncEvent:run(connection)
     ShelterMatters.damageRates = self.damageRates
     ShelterMatters.weatherMultipliers = self.weatherMultipliers
     ShelterMatters.decayProperties = self.decayProperties
+    ShelterMatters.weatherAffectedSpecs = self.weatherAffectedSpecs
+    ShelterMatters.weatherExcludedSpecs = self.weatherExcludedSpecs
+    ShelterMatters.weatherExcludedTypes = self.weatherExcludedTypes
 end
 
 function ShelterMattersSyncEvent.sendToClients()
-    g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.hideShelterStatusIcon, ShelterMatters.damageRates, ShelterMatters.weatherMultipliers, ShelterMatters.decayProperties))
+    g_server:broadcastEvent(ShelterMattersSyncEvent.new(ShelterMatters.hideShelterStatusIcon, ShelterMatters.damageRates, ShelterMatters.weatherMultipliers, ShelterMatters.decayProperties, ShelterMatters.weatherAffectedSpecs, ShelterMatters.weatherExcludedSpecs, ShelterMatters.weatherExcludedTypes))
 end
 
 function ShelterMattersSyncEvent.sendToServer()

@@ -70,6 +70,10 @@ ShelterMatters.decayProperties = {
     ]]--
 }
 
+ShelterMatters.weatherAffectedSpecs = { "shovel", "trailer" }
+ShelterMatters.weatherExcludedSpecs = { "waterTrailer" }
+ShelterMatters.weatherExcludedTypes = { }
+
 ShelterMatters.vehicles = {}
 
 addModEventListener(ShelterMatters)
@@ -379,6 +383,10 @@ function ShelterMatters:saveConfig()
         i = i + 1
     end
 
+    self:saveStringListToConfig(xmlFile, self.weatherAffectedSpecs, "weatherAffectedSpecs")
+    self:saveStringListToConfig(xmlFile, self.weatherExcludedSpecs, "weatherExcludedSpecs")
+    self:saveStringListToConfig(xmlFile, self.weatherExcludedTypes, "weatherExcludedTypes")
+
     saveXMLFile(xmlFile)
     delete(xmlFile)
 
@@ -489,8 +497,44 @@ function ShelterMatters:loadConfig()
         i = i + 1
     end
 
+    self:loadStringListFromConfig(xmlFile, self.weatherAffectedSpecs, "weatherAffectedSpecs")
+    self:loadStringListFromConfig(xmlFile, self.weatherExcludedSpecs, "weatherExcludedSpecs")
+    self:loadStringListFromConfig(xmlFile, self.weatherExcludedTypes, "weatherExcludedTypes")
+
     delete(xmlFile)
     ShelterMatters.log("Configuration loaded from: " .. configFile)
+end
+
+function ShelterMatters:saveStringListToConfig(xmlFile, list, baseKey)
+    local i = 0
+
+    for _, value in ipairs(list) do
+        local key = string.format("ShelterMatters." .. baseKey .. ".value(%d)", i)
+        setXMLString(xmlFile, key .. "#value", value)
+        i = i + 1
+    end
+end
+
+function ShelterMatters:loadStringListFromConfig(xmlFile, list, baseKey)
+    local i = 0
+    local foundValues = false
+
+    while true do
+        local key = string.format("ShelterMatters." .. baseKey .. ".value(%d)", i)
+        local value = getXMLString(xmlFile, key .. "#value")
+        if not value then
+            break
+        end
+
+        if not foundValues then
+            -- Only clear the list if we find values in the save file
+            table.clear(list)  -- Clears the list but only when values exist
+            foundValues = true
+        end
+
+        table.insert(list, value) -- Adds new value to the list
+        i = i + 1
+    end
 end
 
 --[[
