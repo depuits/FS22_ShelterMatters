@@ -90,13 +90,14 @@ end
 ------------------------
 function ShelterMattersObjectDecay:showInfo(superFunc, box)
     -- debugging stuff
- --[[   box:addLine("type", tostring(self.typeName))
+    --box:addLine("type", tostring(self.typeName))
     --box:addLine("isAffectedByWetness", tostring(self:isAffectedByWetness()))
     --box:addLine("isAffectedByTemperature", tostring(self:isAffectedByTemperature()))
-    box:addLine("isAffectedByWeather", tostring(self:isAffectedByWeather()))
-    box:addLine("isCoverClosed", tostring(self:getIsCoverClosed()))
+    --box:addLine("isAffectedByWeather", tostring(self:isAffectedByWeather()))
+    --box:addLine("isCoverClosed", tostring(self:getIsCoverClosed()))
+    --box:addLine("hasSpec", tostring(ShelterMattersObjectDecay.hasMatchingSpecializations(self)))
 
-    local spawnTime = self:getSpawnTime()
+    --[[local spawnTime = self:getSpawnTime()
     if spawnTime ~= nil then
         -- calculate diference in time
         local elapsedSinceSpawn = (currentDay - spawnTime.day) * (24 * 60 * 60 * 1000) + (currentTime - spawnTime.time)
@@ -110,7 +111,7 @@ function ShelterMattersObjectDecay:showInfo(superFunc, box)
         end
     end]]
     -- debug spec rendering
-    ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
+    --ShelterMattersObjectDecay.renderSpecs(self.specializations) -- shovel, trailer - waterTrailer
 
     ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, self)
 
@@ -132,7 +133,26 @@ function ShelterMattersObjectDecay.renderSpecs(specializations)
             local col = math.floor(index / rowCount)
             local row = math.fmod(index, rowCount)
 
-            renderText(x + col * 0.1, y - row * 0.02, 0.01, spec.className)
+            local prefix = ''
+
+
+            -- Check required specializations
+            for _, specName in ipairs(ShelterMatters.weatherAffectedSpecs) do
+                if spec.className == specName then
+                    prefix = '+'
+                    break
+                end
+            end
+
+            -- Check excluded specializations
+            for _, specName in ipairs(ShelterMatters.weatherExcludedSpecs) do
+                if spec.className == specName then
+                    prefix = '-'
+                    break
+                end
+            end
+
+            renderText(x + col * 0.1, y - row * 0.02, 0.01, prefix..spec.className)
         end
     end
 end
@@ -330,11 +350,19 @@ function ShelterMattersObjectDecay.hasMatchingSpecializations(vehicle)
         return false
     end
 
-    -- Check required specializations
+    -- Check required specializations (at least one must be present)
+    local hasRequiredSpec = false
+
     for _, specName in ipairs(ShelterMatters.weatherAffectedSpecs) do
-        if not ShelterMattersObjectDecay.hasSpecialization(specName, vehicle.specializations) then
-            return false -- If a required spec is missing, return false
+        if ShelterMattersObjectDecay.hasSpecialization(specName, vehicle.specializations) then
+            hasRequiredSpec = true
+            break -- Stop searching once we find a matching specialization
         end
+    end
+
+    -- If no required specializations were found, return false
+    if not hasRequiredSpec then
+        return false
     end
 
     -- Check excluded specializations
@@ -378,11 +406,11 @@ function ShelterMattersObjectDecay:getIsCoverClosed()
 end
 
 function ShelterMattersObjectDecay:onFillUnitFillLevelChanged(fillUnitIndex, fillLevelDelta, fillTypeIndex, toolType, fillPositionData, appliedDelta)
-    if fillTypeIndex ~= 1 then
+    if fillUnitIndex ~= 1 then
         -- we only care about fill index 1 at the moment. Multi index storage units are not checked.
         return
     end
-    local fillLevel = self:getFillUnitFillLevel(fillTypeIndex)
+    local fillLevel = self:getFillUnitFillLevel(fillUnitIndex)
     if fillLevel < 0.01 then -- we see this as good as empty
         -- reset wetness, bestBeforeDate, and fillLevelFull when the vehicle is empty
         self:setWetness(0)

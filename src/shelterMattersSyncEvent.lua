@@ -59,6 +59,20 @@ function ShelterMattersSyncEvent:readStream(streamId, connection)
         if streamReadBool(streamId) then
             self.decayProperties[fillType].bestBeforeDecay = streamReadFloat32(streamId)
         end
+
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].maxTemperature = streamReadFloat32(streamId)
+        end
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].maxTemperatureDecay = streamReadFloat32(streamId)
+        end
+
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].minTemperature = streamReadFloat32(streamId)
+        end
+        if streamReadBool(streamId) then
+            self.decayProperties[fillType].minTemperatureDecay = streamReadFloat32(streamId)
+        end
     end
 
     self.weatherAffectedSpecs = self:readStringListFromStream(streamId)
@@ -121,6 +135,20 @@ function ShelterMattersSyncEvent:writeStream(streamId, connection)
         end
         if streamWriteBool(streamId, props.bestBeforeDecay ~= nil) then
             streamWriteFloat32(streamId, props.bestBeforeDecay)
+        end
+
+        if streamWriteBool(streamId, props.maxTemperature ~= nil) then
+            streamWriteFloat32(streamId, props.maxTemperature)
+        end
+        if streamWriteBool(streamId, props.maxTemperatureDecay ~= nil) then
+            streamWriteFloat32(streamId, props.maxTemperatureDecay)
+        end
+
+        if streamWriteBool(streamId, props.minTemperature ~= nil) then
+            streamWriteFloat32(streamId, props.minTemperature)
+        end
+        if streamWriteBool(streamId, props.minTemperatureDecay ~= nil) then
+            streamWriteFloat32(streamId, props.minTemperatureDecay)
         end
     end
 

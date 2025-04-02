@@ -63,7 +63,7 @@ function ShelterMattersObjectDecayFunctions.update(object)
     end
 
     -- update decay by wetness
-    if object:getWetness() > 0 then -- only if the object is wet then it will decay
+    if object:getWetness() > 0 and decayProps then -- only if the object is wet then it will decay
         local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
         local damageWetness = (decayPerMinute * elapsedInMinutes) * object:getWetness()
         object:addDecayAmount(damageWetness)
@@ -125,7 +125,7 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     end
 
     -- display temperature in info box
-    if object:isAffectedByWetness() then
+    if object:isAffectedByTemperature() then
         local decayProps = object:getDecayProperties()
         local hasMaxTemp = decayProps ~= nil and decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0
         local hasMinTemp = decayProps ~= nil and decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0
@@ -283,9 +283,9 @@ function ShelterMattersObjectDecayFunctions.readUpdateStream(streamId, timestamp
                 local month = streamReadInt32(streamId)
                 local year = streamReadInt32(streamId)
 
-                self.bestBefore = { month = month, year = year }
+                spec.bestBefore = { month = month, year = year }
             else
-                self.bestBefore = nil
+                spec.bestBefore = nil
             end
         end
     end

@@ -70,8 +70,8 @@ ShelterMatters.decayProperties = {
     ]]--
 }
 
-ShelterMatters.weatherAffectedSpecs = { "shovel", "trailer" }
-ShelterMatters.weatherExcludedSpecs = { "waterTrailer" }
+ShelterMatters.weatherAffectedSpecs = { "Shovel", "Trailer" }
+ShelterMatters.weatherExcludedSpecs = { "WaterTrailer" }
 ShelterMatters.weatherExcludedTypes = { }
 
 ShelterMatters.vehicles = {}
@@ -510,7 +510,7 @@ function ShelterMatters:saveStringListToConfig(xmlFile, list, baseKey)
 
     for _, value in ipairs(list) do
         local key = string.format("ShelterMatters." .. baseKey .. ".value(%d)", i)
-        setXMLString(xmlFile, key .. "#value", value)
+        setXMLString(xmlFile, key .. "#name", value)
         i = i + 1
     end
 end
@@ -521,7 +521,7 @@ function ShelterMatters:loadStringListFromConfig(xmlFile, list, baseKey)
 
     while true do
         local key = string.format("ShelterMatters." .. baseKey .. ".value(%d)", i)
-        local value = getXMLString(xmlFile, key .. "#value")
+        local value = getXMLString(xmlFile, key .. "#name")
         if not value then
             break
         end
@@ -691,4 +691,19 @@ function ShelterMatters:smResetDecayProperties()
 
     self.decayProperties = ShelterMattersDefaultRules.loadDefaultDecayProperties()
     ShelterMattersSyncEvent.sendToClients()
+end
+
+addConsoleCommand("smListWeatherAffectedSpecs", "Lists specs affected and excluded for weather decay", "smListWeatherAffectedSpecs", ShelterMatters)
+function ShelterMatters:smListWeatherAffectedSpecs()
+    print("=== Weather Affected Specs ===")
+    for _, specName in ipairs(ShelterMatters.weatherAffectedSpecs) do
+        print(specName)
+    end
+    print("=== End of List ===")
+
+    print("=== Weather Excluded Specs ===")
+    for _, specName in ipairs(ShelterMatters.weatherExcludedSpecs) do
+        print(specName)
+    end
+    print("=== End of List ===")
 end
