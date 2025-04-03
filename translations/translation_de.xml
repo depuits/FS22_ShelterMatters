@@ -14,6 +14,20 @@
         <text name="SM_IndoorAreaRectangle25x50"        text="Innenbereich Rechteck 25x50"/>
 
         <text name="SM_AlertBaleDeleted"                text="%s verloren wegen unsachgemäßer Lagerung."/>
-        <text name="SM_InfoBaleDecay"                   text="Verfall"/>
+
+        <text name="SM_InfoBestBefore"                  text="Mindestens haltbar bis"/>
+        <text name="SM_InfoBestBeforeNextYear"          text="%s nächstes Jahr"/>
+        <text name="SM_InfoBestBeforeInYears"           text="%s in %d Jahren"/>
+        <text name="SM_InfoExpired"                     text="Abgelaufen"/>
+        <text name="SM_InfoDecay"                       text="Verfall"/>
+        <text name="SM_InfoTemperature"                 text="Temperatur"/>
+        <text name="SM_InfoMax"                         text="Max"/>
+        <text name="SM_InfoMin"                         text="Min"/>
+        <text name="SM_InfoWetness"                     text="Feuchtigkeit"/>
+        <text name="SM_InfoWetness_1"                   text="Trocken"/>
+        <text name="SM_InfoWetness_2"                   text="Leicht feucht"/>
+        <text name="SM_InfoWetness_3"                   text="Feucht"/>
+        <text name="SM_InfoWetness_4"                   text="Nass"/>
+        <text name="SM_InfoWetness_5"                   text="Durchnässt"/>
     </texts>
 </l10n>

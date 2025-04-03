@@ -14,6 +14,20 @@
         <text name="SM_IndoorAreaRectangle25x50"        text="Espace intérieur rectangle 25x50"/>
 
         <text name="SM_AlertBaleDeleted"                text="%s bale perdu en raison d'un rangement inapproprié."/>
-        <text name="SM_InfoBaleDecay"                   text="Pourriture"/>
+
+        <text name="SM_InfoBestBefore"                  text="À consommer de préférence avant"/>
+        <text name="SM_InfoBestBeforeNextYear"          text="%s l'année prochaine"/>
+        <text name="SM_InfoBestBeforeInYears"           text="%s dans %d ans"/>
+        <text name="SM_InfoExpired"                     text="Expiré"/>
+        <text name="SM_InfoDecay"                       text="Détérioration"/>
+        <text name="SM_InfoTemperature"                 text="Température"/>
+        <text name="SM_InfoMax"                         text="Max"/>
+        <text name="SM_InfoMin"                         text="Min"/>
+        <text name="SM_InfoWetness"                     text="Humidité"/>
+        <text name="SM_InfoWetness_1"                   text="Sec"/>
+        <text name="SM_InfoWetness_2"                   text="Légèrement humide"/>
+        <text name="SM_InfoWetness_3"                   text="Humide"/>
+        <text name="SM_InfoWetness_4"                   text="Mouillé"/>
+        <text name="SM_InfoWetness_5"                   text="Trempé"/>
     </texts>
 </l10n>
