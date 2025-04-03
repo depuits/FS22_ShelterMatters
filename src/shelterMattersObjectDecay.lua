@@ -100,10 +100,12 @@ function ShelterMattersObjectDecay:showInfo(superFunc, box)
     --[[local spawnTime = self:getSpawnTime()
     if spawnTime ~= nil then
         -- calculate diference in time
+        local currentDay = g_currentMission.environment.currentMonotonicDay
+        local currentTime = g_currentMission.environment.dayTime
         local elapsedSinceSpawn = (currentDay - spawnTime.day) * (24 * 60 * 60 * 1000) + (currentTime - spawnTime.time)
-        local elapsedSinceSpawnInHours = elapsedTime / (60 * 60 * 1000) -- Convert from ms to hours
+        local elapsedSinceSpawnInHours = elapsedSinceSpawn / (60 * 60 * 1000) -- Convert from ms to hours
 
-        -- if the spwan proection is within the timeframe don't execute the rest of the function
+        -- if the spawn protection is within the timeframe don't execute the rest of the function
         if elapsedSinceSpawnInHours < ShelterMatters.palletSpawnProtection then
             box:addLine("spawnProtection", "true")
         else
@@ -217,7 +219,7 @@ function ShelterMattersObjectDecay:getFillLevelFull()
     if currentFillLevel ~= nil and currentFillLevel > spec.fillLevelFull then
         -- when the fill level increases this indicates that the pallet is not yet full
         -- so we should update the spawn protection time to start from here
-        if spec.fillLevelFull > 0 and self:getIsPallet() then
+        if spec.fillLevelFull == 0 and self:getIsPallet() then
             -- we only do this when the previous fillLevelFull was 0
             -- if not then the pallets could also be spawned by buying from the store and in that case there is no spawn protection
             local currentDay = g_currentMission.environment.currentMonotonicDay
