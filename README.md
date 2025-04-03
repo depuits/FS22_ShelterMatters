@@ -1,7 +1,24 @@
-
 ![ShelterMatters](logo.png)
 
 **ShelterMatters** enhances the importance of sheds and indoor storage in Farming Simulator 22 by introducing realistic wear and decay mechanics. Vehicles, tools, and stored goods deteriorate faster when exposed to the elements, making proper storage essential. Products now have a best-before period, after which they begin to degrade. Factors like moisture and temperature further influence their lifespan, requiring players to manage storage conditions carefully. Proper shelter is no longer just optional - it is key to efficiently preserving your equipment and produce, adding to a more immersive farming experience.
+
+---
+
+- [Features](#features)
+- [Installation](#installation)
+  - [Uninstalling](#uninstalling)
+- [How It Works](#how-it-works)
+  - [Vehicles and Tools](#vehicles-and-tools)
+  - [Bales, Pallets, and Stored Goods](#bales-pallets-and-stored-goods)
+- [Configuration](#configuration)
+- [Commands](#commands)
+  - [Current Weather](#current-weather)
+  - [Toggle Icon Status](#toggle-icon-status)
+- [Multiplayer Support](#multiplayer-support)
+- [Troubleshooting](#troubleshooting)
+- [Contribution](#contribution)
+- [License](#license)
+- [Credits](#credits)
 
 ---
 
@@ -14,7 +31,7 @@
   - Temperature effects (heat spoilage, freezing damage)
 - **Smart Storage Detection**:
   - Automatic recognition of valid indoor spaces
-  - Custom zone markers for non-standard structures (found in Buildings → Sheds)
+  - Custom zone markers for non-standard structures (found in Buildings - Sheds)
 - **Customizable Settings**:
   - Adjustable decay rates via config files
   - Savegame-specific configurations
@@ -41,51 +58,83 @@ That's it! Your savegame will continue to work as normal without the mod.
 
 ---
 
-## Mod Behavior
+## How It Works
+Here’s an improved version of your **How It Works** section with better flow, clarity, and consistency while keeping all the essential details:
 
-### How It Works
-- Vehicles and tools left outdoors will slowly accumulate damage, even when idle.
-- The mod uses the `indoorAreas` of placeables to detect whether equipment is stored properly.
-- If a building lacks defined indoor areas (common in custom maps), you can use the Indoor Area placeables included in the mod to manually define them.
+---
 
-### Vehicle Damage
+## How It Works
 
-Vehicles left outdoors will accumulate damage over time, depending on their type and the current weather.
-Damage Rate: The rate of damage is configurable for each vehicle type (e.g., tractor, combine harvester, plow, etc.). By default, the rates are set to reflect realistic wear and tear based on each vehicle's purpose.
+ShelterMatters dynamically detects whether vehicles, tools, and products are properly stored using the `indoorAreas` of placeables. If a building lacks defined indoor areas (common for static buildings in custom maps), you can manually define them using the Indoor Area placeables included in the mod.
 
-### Weather Impact
+### Vehicles and Tools
 
-Weather conditions have a direct impact on vehicle damage rates.
+- Vehicles and tools left outdoors will gradually accumulate wear and tear, even when idle.
+- Vehicles in use will only experience their normal operational wear.
 
-**Rain**: Vehicles left outdoors in rain will accumulate damage more quickly.
-**Snow**: Snow also increases wear, especially due to moisture and freezing cycles.
-**Fog**: Slightly increases wear due to moisture in the air.
-**Sunny & Cloudy**: These conditions cause minimal or no additional wear.
+#### Vehicle Damage
 
-### Weather Interaction
-- Damage and wear accumulation rates are influenced by the current weather. For example:
-- **Rain or Snow**: Accelerated damage for vehicles left outside.
+Vehicles degrade over time when exposed to the elements. The rate of damage varies based on the type of vehicle and the current weather conditions.
 
-### Vehicle Shelter Indication
+- **Base Damage Rate**: Each vehicle type (tractors, harvesters, trailers, etc.) has a configurable wear rate, reflecting realistic usage.
+- **Weather Influence**: Environmental conditions can accelerate wear, making storage a crucial part of farm management.
 
-ShelterMatters provides an on-screen indication showing whether the **currently selected vehicle or tool** is inside or outside a shelter. This feature helps players manage their equipment by highlighting when vehicles are protected from increased damage rates due to being exposed outdoors.
+#### Weather Impact on Vehicles
 
-- When inside a vehicle, an on-screen indicator displays the shelter status:
-  - **Inside a Shelter**: Confirms the selected vehicle or tool is within a shelter, sheltering it from outside damage.
-  - **Outside a Shelter**: Warns that the selected vehicle or tool is exposed, making it more susceptible to damage based on the current weather conditions.
+Different weather conditions affect vehicle durability:
 
-- The indication applies specifically to the **currently selected vehicle or tool**, allowing players to monitor the status of individual implements and attachments.
+- **Rain** – Significantly increases wear due to water exposure.
+- **Snow** – Increases wear over time due to freezing and thawing cycles.
+- **Fog** – Causes minor additional wear due to excess moisture.
+- **Sunny & Cloudy** – Standard wear rate with no additional impact.
 
+#### Vehicle Shelter Indication
 
-Below is an example of the shelter indication for a vehicle inside and outside a shed.
+ShelterMatters provides an on-screen indicator showing whether the **currently selected vehicle or tool** is inside or outside a shelter. This helps you track which equipment is protected from the elements.
 
-**Inside a Shelter**  
+- **Inside a Shelter** – Confirms the selected vehicle is protected from environmental wear.
+- **Outside a Shelter** – Warns that the vehicle is exposed, making it more susceptible to damage.
+
+Below is an example of the shelter indication in action:
+
+**Inside a Shelter**
 ![Inside Shelter Example](screenshots/indicationInside.jpg)
 
-**Outside a Shelter**  
+**Outside a Shelter**
 ![Outside Shelter Example](screenshots/indicationOutside.jpg)
 
-This icon can be disabled using the [`smToggleShelterStatusIcon` command](#toggle-icon-status) or by editing the save file.
+You can disable this indicator using the [`smToggleShelterStatusIcon` command](#toggle-icon-status) or by modifying the save file.
+
+---
+
+### Bales, Pallets, and Stored Goods
+
+Stored goods are affected by two key mechanics: **Shelf Life System** and **Weather Exposure**.
+
+#### Shelf Life System
+
+Certain products have a **best-before period**. Once this period expires, they begin to decay, regardless of storage conditions.
+
+#### Weather Exposure (Only Applies Outdoors)
+
+- **Temperature Sensitivity**: Some products are temperature-sensitive and will decay if stored outside their optimal temperature range.
+- **Moisture Absorption**: Products left in rain, snow, or fog will absorb moisture. Moisture accumulation makes products wet. Wet products will decay regardless of whether they are stored inside or outside.
+    - **Rain** – Causes rapid moisture absorption.
+    - **Snow** – Slower moisture absorption, as snow must first settle and then melt.
+    - **Fog** – Minor moisture accumulation over time.
+    - **Sunny & Cloudy** – No additional moisture effects.
+- **Wetness Decay**: Once wet, a product will continue to decay until dried, whether stored inside or outside.
+- **Drying Mechanism**: Wet products can be dried by processing them again (e.g., cutting open and rebaling bales, unloading and reloading trailers).
+- **Pallet Spawn Protection**: Newly spawned pallets have temporary protection from decay and moisture (default: 24 in-game hours).
+
+#### **Wetness Levels**
+Products can have different levels of moisture, affecting decay rates:
+
+- **Dry** (0%) – No decay.
+- **Slightly Moist** (1 - 30%) – Minor decay.
+- **Damp** (30 - 60%) – Noticeable decay.
+- **Wet** (60 - 80%) – Significant decay.
+- **Soaking Wet** (80 - 100%) – Maximum decay. 
 
 ---
 
@@ -93,23 +142,23 @@ This icon can be disabled using the [`smToggleShelterStatusIcon` command](#toggl
 
 The mod comes with a default configuration that can be customized. All parameters are configurable through a file in your savegame or by using in game commands.
 
-- **Hide Shelter Status Icon**: Determines wheiter the Vehicle Shelter Indication is displayed.
-- **Pallet Spawn Protection**: Time in hours for spawned pallets to have decay and wetness protection.
-- **Damage Rates**: Controls how much damage is applied to each vehicle type. (This value is a percentage of damage per in-game year)
-- **Weather Multipliers**: Controls how the weather affects vehicle damage over time.
-- **Weather Wetness Rates**: Controls how fast products get wet in a specific weather condition. (expressed in %/min)
-- **Decay Properties**:
-    - **wetnessImpact**: Multiplier on weatherWetnessRates to make the weather impact more or less
-    - **wetnessDecay**: Amount of decay when fully wet (liters/month)
-    - **bestBeforePeriod**: Shelf life before decay starts (months)
-    - **bestBeforeDecay**: Decays after best-before period ended (liters/month)
-    - **maxTemperature**: Maximum temperature the product stays good in (celcius)
-    - **maxTemperatureDecay**: Decay when product stays above the maximum temperature (liters/hour)
-    - **minTemperature**: Minimum temperature the product stays good in (celcius)
-    - **minTemperatureDecay**: Decay when product stays under the minimum temperature (liters/hour)
-- **weatherAffectedSpecs**: Vehicle specialisations on which the weather *has* impact on the products. If a vehicle has a single one of these then it will be affected by weather conditions.
-- **weatherExcludedSpecs**: Vehicle specialisations on which the weather *has no* impact on the products. If a vehicle has a single one of these then it will not be affected by weather conditions.
-- **weatherExcludedTypes**: Vehicle type in which the weather has no impact on the products.
+- **Hide Shelter Status Icon**: Toggles the visibility of the Vehicle Shelter Indication.
+- **Pallet Spawn Protection**: Sets the duration (in hours) during which newly spawned pallets are protected from decay and wetness.
+- **Damage Rates**: Defines how much damage is applied to different vehicle types over time (expressed as a percentage per in-game year).
+- **Weather Multipliers**: Adjusts how various weather conditions influence vehicle wear and degradation.
+- **Weather Wetness Rates**: Controls the rate at which products absorb moisture in different weather conditions (expressed as %/min).
+- **Decay Properties** (affects product degradation based on environmental conditions, **optional**—properties can be omitted if they do not apply to a specific product):
+    - **wetnessImpact**: Multiplier affecting how quickly moisture affects the product.
+    - **wetnessDecay**: Deterioration rate when fully wet (liters/month).
+    - **bestBeforePeriod**: Duration (in months) before a product starts to decay.
+    - **bestBeforeDecay**: Decay rate after the best-before period expires (liters/month).
+    - **maxTemperature**: Maximum temperature at which the product remains in good condition (°C).
+    - **maxTemperatureDecay**: Deterioration rate when above the maximum temperature (liters/hour).
+    - **minTemperature**: Minimum temperature at which the product remains in good condition (°C).
+    - **minTemperatureDecay**: Deterioration rate when below the minimum temperature (liters/hour).
+- **Weather-Affected Specs**: Determines which vehicle specializations are impacted by weather conditions. If a vehicle has at least one of these, it will be affected.
+- **Weather-Excluded Specs**: Specifies vehicle specializations that are immune to weather-related degradation. If a vehicle has any of these, it will not be affected.
+- **Weather-Excluded Types**: Defines vehicle types that are not affected by weather conditions.
 
 ### Example config
 
@@ -159,7 +208,7 @@ The mod comes with a default configuration that can be customized. All parameter
 
 ## Commands
 
-The following commands can be usefull for quick ingame changes and debug purposes. These commands must be entered through the developer console, which can be accessed by enabling the console in the game's settings.
+The following commands can be useful for quick ingame changes and debug purposes. These commands must be entered through the developer console, which can be accessed by enabling the console in the game's settings.
 
 ---
 
@@ -184,7 +233,6 @@ The ShelterMatters mod is compatible with multiplayer. The configuration and dam
 
 ## Troubleshooting
 
-### Common Issues
 **Q: Vehicles are not recognized as "inside".**
 - Ensure the shed or placeable has a properly defined indoor area.
 - Move the vehicle slightly to ensure it is within the boundaries.
