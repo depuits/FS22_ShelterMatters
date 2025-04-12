@@ -149,6 +149,7 @@ Changelog v1.1.0.0
 
     <placeableSpecializations>
         <specialization name="shelterMattersIndoorArea" className="ShelterMattersIndoorArea" filename="src/shelterMattersIndoorArea.lua"/>
+        <specialization name="shelterMattersSiloDecay" className="ShelterMattersSiloDecay" filename="src/shelterMattersSiloDecay.lua"/>
     </placeableSpecializations>
 
     <placeableTypes>

@@ -1,32 +1,33 @@
 local modName = g_currentModName
 
-ShelterMattesPlaceableSiloDecay = {}
-ShelterMattesPlaceableSiloDecay.SPEC_TABLE_NAME = "spec_" .. modName .. ".objectRotate"
+ShelterMattersSiloDecay = {}
+ShelterMattersSiloDecayShelterMattersSiloDecay.SPEC_NAME = "shelterMattersSiloDecay"
+ShelterMattersSiloDecay.SPEC_TABLE_NAME = "spec_"..modName.."."..ShelterMattersObjectDecay.SPEC_NAME
 
-function ShelterMattesPlaceableSiloDecay.prerequisitesPresent(specializations)
+function ShelterMattersSiloDecay.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(Silo, specializations)
 end
 
-function ShelterMattesPlaceableSiloDecay.registerFunctions(placeableType)
-    SpecializationUtil.registerFunction(placeableType, "updateBestBefore", ShelterMattesPlaceableSiloDecay.updateBestBefore)
+function ShelterMattersSiloDecay.registerFunctions(placeableType)
+    SpecializationUtil.registerFunction(placeableType, "updateBestBefore", ShelterMattersSiloDecay.updateBestBefore)
 end
 
-function ShelterMattesPlaceableSiloDecay.registerOverwrittenFunctions(placeableType)
-    SpecializationUtil.registerOverwrittenFunction(placeableType, "updateInfo", ShelterMattesPlaceableSiloDecay.updateInfo)
+function ShelterMattersSiloDecay.registerOverwrittenFunctions(placeableType)
+    SpecializationUtil.registerOverwrittenFunction(placeableType, "updateInfo", ShelterMattersSiloDecay.updateInfo)
 end
 
-function ShelterMattesPlaceableSiloDecay.registerEventListeners(placeableType)
-    SpecializationUtil.registerEventListener(placeableType, "onLoad", ShelterMattesPlaceableSiloDecay)
-    SpecializationUtil.registerEventListener(placeableType, "onUpdate", ShelterMattesPlaceableSiloDecay)
+function ShelterMattersSiloDecay.registerEventListeners(placeableType)
+    SpecializationUtil.registerEventListener(placeableType, "onLoad", ShelterMattersSiloDecay)
+    SpecializationUtil.registerEventListener(placeableType, "onUpdate", ShelterMattersSiloDecay)
 end
 
-function ShelterMattesPlaceableSiloDecay:onLoad(savegame)
+function ShelterMattersSiloDecay:onLoad(savegame)
     self.spec_bestBeforeSilo = {
         lastDecayCheck = 0
     }
 end
 
-function ShelterMattesPlaceableSiloDecay:onUpdate(dt)
+function ShelterMattersSiloDecay:onUpdate(dt)
     if not self.storage then return end
 
     local storageId = tostring(self.storage)
@@ -59,7 +60,7 @@ function ShelterMattesPlaceableSiloDecay:onUpdate(dt)
     end
 end
 
-function ShelterMattesPlaceableSiloDecay:updateInfo(superFunc, infoTable)
+function ShelterMattersSiloDecay:updateInfo(superFunc, infoTable)
     superFunc(self, infoTable)
 
     if not self.storage then return end
