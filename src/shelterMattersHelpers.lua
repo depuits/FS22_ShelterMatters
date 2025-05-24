@@ -66,6 +66,26 @@ function ShelterMattersHelpers.getElapsedMinutesSince(targetMonth, targetYear)
     return currentMinutes - startMinutes
 end
 
+
+-----------------------------
+-- distance math helpers --
+-----------------------------
+-- Function to calculate distance between two points in 3D space
+function ShelterMattersHelpers.calculateDistance(x1, y1, z1, x2, y2, z2)
+    local dx = x2 - x1
+    local dy = y2 - y1
+    local dz = z2 - z1
+    return math.sqrt(dx * dx + dy * dy + dz * dz)
+end
+
+-- Function to calculate distance between two points in 3D space
+function ShelterMattersHelpers.calculateDistanceSq(x1, y1, z1, x2, y2, z2)
+    local dx = x2 - x1
+    --local dy = y2 - y1 -- we ignore the Y axis because this is up and down and the other calculations also ignore this
+    local dz = z2 - z1
+    return (dx * dx + dz * dz)
+end
+
 -----------------------------
 -- infobox display helpers --
 -----------------------------

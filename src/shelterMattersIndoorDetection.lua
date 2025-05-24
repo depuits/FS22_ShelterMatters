@@ -19,14 +19,6 @@ function ShelterMattersIndoorDetection.isNodeInShed(node)
     return false
 end
 
--- Function to calculate distance between two points in 3D space
-local function calculateDistance(x1, y1, z1, x2, y2, z2)
-    local dx = x2 - x1
-    local dy = y2 - y1
-    local dz = z2 - z1
-    return math.sqrt(dx * dx + dy * dy + dz * dz)
-end
-
 -- Function to check if a vehicle is inside any indoor area of a placeable
 function ShelterMattersIndoorDetection.isPointInsideplaceable(x, y, z, placeable)
     if not placeable.spec_indoorAreas or not placeable.spec_indoorAreas.areas then
@@ -34,9 +26,9 @@ function ShelterMattersIndoorDetection.isPointInsideplaceable(x, y, z, placeable
     end
 
     local rootX, rootY, rootZ = getWorldTranslation(placeable.rootNode)
-    local distance = calculateDistance(x, y, z, rootX, rootY, rootZ)
+    local distanceSq = ShelterMattersHelpers.calculateDistanceSq(x, y, z, rootX, rootY, rootZ)
     -- optimization: no shed is bigger then 200 meters so we don't check when obtjects are further away then 100m from the placeable center
-    if distance > 100 then
+    if distanceSq > (100 * 100) then
         return false
     end
 
