@@ -1,4 +1,3 @@
-
 ShelterMattersObjectDecayFunctions = {
 }
 
@@ -7,6 +6,8 @@ function ShelterMattersObjectDecayFunctions.update(object)
     if not g_currentMission:getIsServer() then
         return -- Skip on clients
     end
+
+    --TODO run update for each fillUnit
 
     local currentDay = g_currentMission.environment.currentMonotonicDay
     local currentTime = g_currentMission.environment.dayTime
@@ -154,6 +155,11 @@ function ShelterMattersObjectDecayFunctions.isObjectInShed(object, inShed) -- ob
 end
 
 function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
+    -- TODO display first bestBefore
+    -- TODO display highest min and lowest max values of all units
+    -- TODO display combined decay value (add all decay amounts and filllevelFulls)
+    -- TODO display avarage wetness
+
     -- display best by date
     local bb = object:getBestBefore()
     ShelterMattersHelpers.infoBoxAddBestBefore(box, bb)
