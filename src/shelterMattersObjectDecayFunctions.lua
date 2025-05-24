@@ -36,9 +36,9 @@ function ShelterMattersObjectDecayFunctions.update(object)
     if spawnTime ~= nil then
         -- calculate diference in time
         local elapsedSinceSpawn = (currentDay - spawnTime.day) * (24 * 60 * 60 * 1000) + (currentTime - spawnTime.time)
-        local elapsedSinceSpawnInHours = elapsedTime / (60 * 60 * 1000) -- Convert from ms to hours
+        local elapsedSinceSpawnInHours = elapsedSinceSpawn / (60 * 60 * 1000) -- Convert from ms to hours
 
-        -- if the spwan proection is within the timeframe don't execute the rest of the function
+        -- if the spawn protection is within the timeframe don't execute the rest of the function
         if elapsedSinceSpawnInHours < ShelterMatters.palletSpawnProtection then
             return
         end
