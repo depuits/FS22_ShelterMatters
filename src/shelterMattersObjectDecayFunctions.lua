@@ -56,7 +56,7 @@ function ShelterMattersObjectDecayFunctions.update(object)
             wetnessRate > 0 and -- only if there is a wetnessRate
             object:getWetness() < 1 -- object is not yet soaked
         then
-            inShed = ShelterMattersObjectDecayFunctions.isObjectInShed(object, inShed)
+            inShed = ShelterMatters.isObjectInShed(object, inShed)
             if not inShed then
                 object:setWetness(object:getWetness() + (wetnessRate * decayProps.wetnessImpact * elapsedInMinutes))
             end
@@ -76,7 +76,7 @@ function ShelterMattersObjectDecayFunctions.update(object)
 
         -- max tempertature decay
         if decayProps.maxTemperature ~= nil and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 then
-            inShed = ShelterMattersObjectDecayFunctions.isObjectInShed(object, inShed)
+            inShed = ShelterMatters.isObjectInShed(object, inShed)
             if not inShed then -- only if the object is not inside it will decay
                 local decayPerMinute = decayProps.maxTemperatureDecay / 60
                 local damageMaxTemp = (decayPerMinute * elapsedInMinutes)
@@ -86,7 +86,7 @@ function ShelterMattersObjectDecayFunctions.update(object)
 
         -- min temperature decay
         if decayProps.minTemperature ~= nil and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 then
-            inShed = ShelterMattersObjectDecayFunctions.isObjectInShed(object, inShed)
+            inShed = ShelterMatters.isObjectInShed(object, inShed)
             if not inShed then -- only if the object is not inside it will decay
                 local decayPerMinute = decayProps.minTemperatureDecay / 60
                 local damageMinTemp = (decayPerMinute * elapsedInMinutes)
@@ -111,47 +111,6 @@ function ShelterMattersObjectDecayFunctions.update(object)
         local decayDamage = elapsedDecayInMinutes * decayScaled
         object:addDecayAmount(decayDamage)
     end
-end
-
-function ShelterMattersObjectDecayFunctions.isObjectInShed(object, inShed) -- object and locally cached inShed value
-     -- 1. Use cached parameter if provided
-     if inShed ~= nil then
-        return inShed
-    end
-
-    -- 2. Get current world position
-    local objectNode = (object.rootNode or object.nodeId) -- vehicles use rootNode and bales use nodeId
-    local x, y, z = getWorldTranslation(objectNode)
-
-    -- 3. Check if last shed state and position exist
-    if object.sm_cache == nil or object.sm_cache.x == nil then
-        -- No previous data, compute and store
-        local isInShed = ShelterMatters.isObjectInShed(object)
-        object.sm_cache = {
-            x = x,
-            y = y,
-            z = z,
-            isInShed = isInShed
-        }
-        return isInShed
-    end
-
-    -- 4. Calculate squared distance between current and last checked position
-    local dSq = ShelterMattersHelpers.calculateDistanceSq(
-        x, y, z,
-        object.sm_cache.x, object.sm_cache.y, object.sm_cache.z
-    )
-
-    -- 5. If moved more than 10 cm (0.1m), recalculate
-    if dSq > 0.01 then  -- 0.1^2 = 0.01
-        local isInShed = ShelterMatters.isObjectInShed(object)
-        object.sm_cache.x = x
-        object.sm_cache.y = y
-        object.sm_cache.z = z
-        object.sm_cache.isInShed = isInShed
-    end
-
-    return object.sm_cache.isInShed
 end
 
 function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)

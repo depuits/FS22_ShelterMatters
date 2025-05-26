@@ -305,11 +305,7 @@ function ShelterMatters:getDamageRate(vehicle)
 end
 
 function ShelterMatters.isObjectInShed(object, inShed) -- optional inShed parameter, if this is not nil then the inShed value will be returned else we will check in the world if we need to calculate the inShed
-    if inShed == nil then
-        return ShelterMattersIndoorDetection.isObjectInShed(object)
-    else
-        return inShed
-    end
+    return ShelterMattersIndoorDetection.isObjectInShed(object, inShed)
 end
 
 --[[

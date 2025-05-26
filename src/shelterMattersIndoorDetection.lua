@@ -3,8 +3,45 @@
 ShelterMattersIndoorDetection = {
 }
 
-function ShelterMattersIndoorDetection.isObjectInShed(object)
-    return ShelterMattersIndoorDetection.isNodeInShed(object.rootNode or object.nodeId) -- vehicles use rootNode and bales use nodeId
+function ShelterMattersIndoorDetection.isObjectInShed(object, inShed) -- object and locally cached inShed value
+     -- 1. Use cached parameter if provided
+     if inShed ~= nil then
+        return inShed
+    end
+
+    -- 2. Get current world position
+    local objectNode = (object.rootNode or object.nodeId) -- vehicles use rootNode and bales use nodeId
+    local x, y, z = getWorldTranslation(objectNode)
+
+    -- 3. Check if last shed state and position exist
+    if object.sm_cache == nil or object.sm_cache.x == nil then
+        -- No previous data, compute and store
+        local isInShed = ShelterMattersIndoorDetection.isNodeInShed(objectNode)
+        object.sm_cache = {
+            x = x,
+            y = y,
+            z = z,
+            isInShed = isInShed
+        }
+        return isInShed
+    end
+
+    -- 4. Calculate squared distance between current and last checked position
+    local dSq = ShelterMattersHelpers.calculateDistanceSq(
+        x, y, z,
+        object.sm_cache.x, object.sm_cache.y, object.sm_cache.z
+    )
+
+    -- 5. If moved more than 10 cm (0.1m), recalculate
+    if dSq > 0.01 then  -- 0.1^2 = 0.01
+        local isInShed = ShelterMattersIndoorDetection.isNodeInShed(objectNode)
+        object.sm_cache.x = x
+        object.sm_cache.y = y
+        object.sm_cache.z = z
+        object.sm_cache.isInShed = isInShed
+    end
+
+    return object.sm_cache.isInShed
 end
 
 function ShelterMattersIndoorDetection.isNodeInShed(node)
