@@ -7,8 +7,6 @@ function ShelterMattersObjectDecayFunctions.update(object)
         return -- Skip on clients
     end
 
-    --TODO run update for each fillUnit
-
     local currentDay = g_currentMission.environment.currentMonotonicDay
     local currentTime = g_currentMission.environment.dayTime
 
@@ -45,71 +43,9 @@ function ShelterMattersObjectDecayFunctions.update(object)
         end
     end
 
-    local decayProps = object:getDecayProperties()
-    local inShed = nil -- preinit inShed so when it is calculated in one of the step it can be reused
-
-    -- update wetness impact
-    if object:isAffectedByWetness() then -- we will not check wetness if the is no decay for it
-        local wetnessRate = ShelterMatters:getWeatherWetnessRate()
-        -- update wetness
-        if
-            wetnessRate > 0 and -- only if there is a wetnessRate
-            object:getWetness() < 1 -- object is not yet soaked
-        then
-            inShed = ShelterMatters.isObjectInShed(object, inShed)
-            if not inShed then
-                object:setWetness(object:getWetness() + (wetnessRate * decayProps.wetnessImpact * elapsedInMinutes))
-            end
-        end
-    end
-
-    -- update decay by wetness
-    if object:getWetness() > 0 and decayProps then -- only if the object is wet then it will decay
-        local decayPerMinute = decayProps.wetnessDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
-        local damageWetness = (decayPerMinute * elapsedInMinutes) * object:getWetness()
-        object:addDecayAmount(damageWetness)
-    end
-
-    -- update temperature impact
-    if object:isAffectedByTemperature() then
-        local temperature = g_currentMission.environment.weather:getCurrentTemperature()
-
-        -- max tempertature decay
-        if decayProps.maxTemperature ~= nil and decayProps.maxTemperature < temperature and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 then
-            inShed = ShelterMatters.isObjectInShed(object, inShed)
-            if not inShed then -- only if the object is not inside it will decay
-                local decayPerMinute = decayProps.maxTemperatureDecay / 60
-                local damageMaxTemp = (decayPerMinute * elapsedInMinutes)
-                object:addDecayAmount(damageMaxTemp)
-            end
-        end
-
-        -- min temperature decay
-        if decayProps.minTemperature ~= nil and decayProps.minTemperature > temperature and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 then
-            inShed = ShelterMatters.isObjectInShed(object, inShed)
-            if not inShed then -- only if the object is not inside it will decay
-                local decayPerMinute = decayProps.minTemperatureDecay / 60
-                local damageMinTemp = (decayPerMinute * elapsedInMinutes)
-                object:addDecayAmount(damageMinTemp)
-            end
-        end
-    end
-
-    -- update bestBefore
-    local bb = object:getBestBefore()
-    if bb ~= nil and bb.month < g_currentMission.environment.currentPeriod and bb.year <= g_currentMission.environment.currentYear then
-        local elapsedDecayInMinutes = elapsedInMinutes -- decay from lastupdate
-        -- unless the last update is from before the best before date
-        if ShelterMattersHelpers.isLastUpdateBefore(elapsedInMinutes, bb.month, bb.year) then
-            -- if it is from before then only decay from the bestbefore date
-            elapsedDecayInMinutes = ShelterMattersHelpers.getElapsedMinutesSince(bb.month, bb.year)
-        end
- 
-        -- calculate decay scaled to the minute timeframe given the decay in liters/month
-        -- => value / minutes / hours / days
-        local decayScaled = decayProps.bestBeforeDecay / 60 /  24 / g_currentMission.environment.daysPerPeriod
-        local decayDamage = elapsedDecayInMinutes * decayScaled
-        object:addDecayAmount(decayDamage)
+    -- run update for each fillUnit
+    for _, unit in ipairs(object:getDecayUnits) do
+        unit:update(elapsedInMinutes)
     end
 end
 
@@ -162,6 +98,7 @@ end
 -----------------------------------
 
 function ShelterMattersObjectDecayFunctions.registerSavegameXMLPaths(schema, basePath)
+    --TODO
     schema:register(XMLValueType.INT, basePath .. ".lastUpdate#day", "Last update day of current item")
     schema:register(XMLValueType.FLOAT, basePath .. ".lastUpdate#time", "Last update time of current item")
 
@@ -178,23 +115,10 @@ end
 
 function ShelterMattersObjectDecayFunctions.initObject(self, spec)
     spec.lastUpdate = {} -- initialize the lastUpdate as empty object to prevent errors when saving thing that have never been updated yet
-
-    spec.wetness = 0
-    spec.wetnessDirtyFlag = self:getNextDirtyFlag()
-
-    spec.fillLevelFull = 0
-    spec.fillLevelFullDirtyFlag = self:getNextDirtyFlag()
-
-    spec.decayAmount = 0
-    spec.decayAmountDirtyFlag = self:getNextDirtyFlag()
-    
-    spec.bestBeforeDirtyFlag = self:getNextDirtyFlag()
-    
-    -- following are set dynamicly if not yet defined
-    -- spec.spawnTime, spec.bestBefore
 end
 
 function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
+    --TODO
 
     spec.lastUpdate = { day = xmlFile:getValue(key .. ".lastUpdate#day"), time = xmlFile:getValue(key .. ".lastUpdate#time") }
 
@@ -219,6 +143,7 @@ function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
 end
 
 function ShelterMattersObjectDecayFunctions.saveToXMLFile(xmlFile, key, spec)
+    --TODO
     if spec.lastUpdate ~= nil then -- it is posible that a bale was never updated if this mod is added to an existing savegame
         xmlFile:setValue(key .. ".lastUpdate#day", spec.lastUpdate.day)
         xmlFile:setValue(key .. ".lastUpdate#time", spec.lastUpdate.time)
@@ -246,74 +171,30 @@ end
 -- lastUpdate and spawnTime are not synced because those values are only used on the server
 
 function ShelterMattersObjectDecayFunctions.readStream(streamId, connection, spec)
-    spec.wetness = streamReadFloat32(streamId)
-    spec.fillLevelFull = streamReadFloat32(streamId)
-    spec.decayAmount = streamReadFloat32(streamId)
-
-    if streamReadBool(streamId) then
-        local month = streamReadInt32(streamId)
-        local year = streamReadInt32(streamId)
-
-        spec.bestBefore = { month = month, year = year }
-    else
-        spec.bestBefore = nil
+    for _, unit in ipairs(spec.decayUnits) do
+        unit:readStream(streamId, connection)
     end
 end
 function ShelterMattersObjectDecayFunctions.writeStream(streamId, connection, spec)
-    streamWriteFloat32(streamId, spec.wetness)
-    streamWriteFloat32(streamId, spec.fillLevelFull)
-    streamWriteFloat32(streamId, spec.decayAmount)
-
-    if streamWriteBool(streamId, spec.bestBefore ~= nil) then
-        streamWriteInt32(streamId, spec.bestBefore.month)
-        streamWriteInt32(streamId, spec.bestBefore.year)
+    for _, unit in ipairs(spec.decayUnits) do
+        unit:writeStream(streamId, connection)
     end
 end
 
 function ShelterMattersObjectDecayFunctions.readUpdateStream(streamId, timestamp, connection, spec)
     if connection:getIsServer() then
-        if streamReadBool(streamId) then
-            spec.wetness = streamReadFloat32(streamId)
-        end
-
-        if streamReadBool(streamId) then
-            spec.fillLevelFull = streamReadFloat32(streamId)
-        end
-
-        if streamReadBool(streamId) then
-            spec.decayAmount = streamReadFloat32(streamId)
-        end
-
-        if streamReadBool(streamId) then
+        for _, unit in ipairs(spec.decayUnits) do
             if streamReadBool(streamId) then
-                local month = streamReadInt32(streamId)
-                local year = streamReadInt32(streamId)
-
-                spec.bestBefore = { month = month, year = year }
-            else
-                spec.bestBefore = nil
+                unit:readStream(streamId)
             end
         end
     end
 end
 function ShelterMattersObjectDecayFunctions.writeUpdateStream(streamId, connection, dirtyMask, spec)
     if not connection:getIsServer() then
-        if streamWriteBool(streamId, bitAND(dirtyMask, spec.wetnessDirtyFlag) ~= 0) then
-            streamWriteFloat32(streamId, spec.wetness)
-        end
-
-        if streamWriteBool(streamId, bitAND(dirtyMask, spec.fillLevelFullDirtyFlag) ~= 0) then
-            streamWriteFloat32(streamId, spec.fillLevelFull)
-        end
-
-        if streamWriteBool(streamId, bitAND(dirtyMask, spec.decayAmountDirtyFlag) ~= 0) then
-            streamWriteFloat32(streamId, spec.decayAmount)
-        end
-
-        if streamWriteBool(streamId, bitAND(dirtyMask, spec.bestBeforeDirtyFlag) ~= 0) then
-            if streamWriteBool(streamId, spec.bestBefore ~= nil) then
-                streamWriteInt32(streamId, spec.bestBefore.month)
-                streamWriteInt32(streamId, spec.bestBefore.year)
+        for _, unit in ipairs(spec.decayUnits) do
+            if streamWriteBool(streamId, bitAND(dirtyMask, unit.dirtyFlag) ~= 0) then
+                unit:writeStream(streamId, connection)
             end
         end
     end

@@ -39,11 +39,13 @@ function ShelterMattersBale.new(isServer, superFunc, isClient, customMt)
 end
 
 function ShelterMattersBale.loadBaleAttributesFromXMLFile(attributes, superFunc, xmlFile, key, resetVehicles)
+    --TODO
     ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, attributes)
     return superFunc(attributes, xmlFile, key, resetVehicles)
 end
 
 function ShelterMattersBale:getBaleAttributes(superFunc)
+    --TODO
     attributes = superFunc(self)
     attributes.lastUpdate = self.lastUpdate
 
@@ -57,6 +59,7 @@ function ShelterMattersBale:getBaleAttributes(superFunc)
 end
 
 function ShelterMattersBale:applyBaleAttributes(attributes)
+    --TODO
     self.lastUpdate = attributes.lastUpdate or self.lastUpdate
 
     self:setBestBefore(attributes.bestBefore or self.bestBefore)
@@ -97,104 +100,12 @@ function Bale:getSpawnTime()
     return self.spawnTime
 end
 
-function Bale:getWetness()
-    return self.wetness
+function Bale:smGetFillLevel(index)
+    return self.fillLevel
 end
 
-function Bale:setWetness(wetness)
-    self.wetness = MathUtil.clamp(wetness, 0, 1)
-
-    if self.isServer then
-        self:raiseDirtyFlags(self.wetnessDirtyFlag)
-    end
-end
-
-function Bale:isAffectedByWetness()
-    -- only things with a decay rate are affected by wetness
-    local decayProps = self:getDecayProperties()
-
-    return decayProps ~= nil and -- should have decay properties defined
-        decayProps.wetnessImpact ~= nil and decayProps.wetnessImpact > 0 and -- and the wetnessImpact must be greater then 0
-        decayProps.wetnessDecay ~= nil and decayProps.wetnessDecay > 0 and -- and there must also be a decay from the wetness
-        self.wrappingState ~= 1 -- wrapped bales don't get wet
-end
-
-function Bale:isAffectedByTemperature()
-    -- only things with a decay rate are affected by wetness
-    local decayProps = self:getDecayProperties()
-
-    return decayProps ~= nil and ( -- should have decay properties defined
-        ( decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0 ) or -- and there must also be a decay from the maxTemperatureDecay
-        ( decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0 ) -- or there must also be a decay from the minTemperatureDecay
-    )
-end
-
-function Bale:getFillLevelFull()
-    local currentFillLevel = self.fillLevel
-
-    if currentFillLevel ~= nil and currentFillLevel > self.fillLevelFull then
-        -- unlike for the pallets we never update the spawntime because bales don't get protection
-        
-        self:setFillLevelFull(currentFillLevel)
-    end
-
-    return self.fillLevelFull
-end
-function Bale:setFillLevelFull(fillLevelFull)
-    self.fillLevelFull = fillLevelFull
-
-    if self.isServer then
-        self:raiseDirtyFlags(self.fillLevelFullDirtyFlag)
-    end
-end
-
-function Bale:getBestBefore()
-    if self.bestBefore ~= nil then
-        return self.bestBefore
-    end
-
-    local decayProps = self:getDecayProperties()
-    
-    -- if type bestBeforePeriod or bestBeforeDecay not defined then return nil
-    if decayProps ~= nil and 
-        decayProps.bestBeforePeriod ~= nil and decayProps.bestBeforePeriod > 0 and 
-        decayProps.bestBeforeDecay ~= nil and decayProps.bestBeforeDecay > 0 
-    then
-        local month = g_currentMission.environment.currentPeriod + decayProps.bestBeforePeriod -- 1 (March) to 12 (Feb)
-        local year = g_currentMission.environment.currentYear
-
-        -- Handle month rollover
-        if month > 12 then
-            year = year + math.floor((month - 1) / 12)  -- Increase the year
-            month = ((month - 1) % 12) + 1  -- Wrap month to stay within 1-12
-        end
-        
-        self:setBestBefore({ month = month, year = year })
-    end
-
-    return self.bestBefore
-end
-
-function Bale:setBestBefore(bestBefore)
-    self.bestBefore = bestBefore
-
-    -- if the bestbefore is not valid then we clear it
-    if bestBefore == nil or bestBefore.month == nil or bestBefore.year == nil then
-        self.bestBefore = nil
-    end
-
-    if self.isServer then
-        self:raiseDirtyFlags(self.bestBeforeDirtyFlag)
-    end
-end
-
-function Bale:addDecayAmount(decayAmount)
-    if self.fillLevelFull == nil then
-        self:setFillLevelFull(self.fillLevel)
-    end
-
-    self:setDecayAmount(self.decayAmount + decayAmount)
-    self:setFillLevel(self.fillLevel - decayAmount)
+function Bale:smAddFillLevel(index, amount)
+    self:setFillLevel(self.fillLevel + amount)
 
     local fillTypeInfo = self:getFillTypeInfo(self.fillType)
     if fillTypeInfo ~= nil then
@@ -209,20 +120,19 @@ function Bale:addDecayAmount(decayAmount)
         g_server:broadcastEvent(shelterMattersBaleDecayedEvent.new(self))
     end
 end
-function Bale:getDecayAmount()
-    return self.decayAmount
-end
-function Bale:setDecayAmount(decayAmount)
-    self.decayAmount = MathUtil.clamp(decayAmount, 0, self.fillLevelFull)
 
-    if self.isServer then
-        self:raiseDirtyFlags(self.decayAmountDirtyFlag)
-    end
+function Bale:smGetFillType(index)
+    return self:getFillType()
 end
 
-function Bale:getDecayProperties()
-    return ShelterMatters.decayProperties[self:getFillType()]
+function Bale:smIsAffectedByWeather()
+    return self.wrappingState ~= 1 -- wrapped bales are not affected by weather
 end
+
+function Bale:getDecayUnits()
+    return self.decayUnits
+end
+
 
 --------------------------------
 -- multiplayer sync functions --
