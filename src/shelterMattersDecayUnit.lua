@@ -1,6 +1,10 @@
 ShelterMattersDecayUnit = {}
 ShelterMattersDecayUnit_mt = Class(ShelterMattersDecayUnit)
 
+-----------------------------------
+-- init, load and save functions --
+-----------------------------------
+
 function ShelterMattersDecayUnit.new(parent, fillUnitIndex)
     local self = setmetatable({}, ShelterMattersDecayUnit_mt)
 
@@ -22,6 +26,49 @@ function ShelterMattersDecayUnit.new(parent, fillUnitIndex)
     return self
 end
 
+function ShelterMattersDecayUnit.registerSavegameXMLPaths(schema, basePath)
+    schema:register(XMLValueType.INT, basePath .. "#index", "Fill Unit index")
+
+    schema:register(XMLValueType.INT, basePath .. ".bestBefore#month", "Best before month of current item")
+    schema:register(XMLValueType.INT, basePath .. ".bestBefore#year", "Best before year of current item")
+
+    schema:register(XMLValueType.FLOAT, basePath .. "#wetness", "Wetness level of current item")
+    schema:register(XMLValueType.FLOAT, basePath .. "#fillLevelFull", "Current item fill level when it was created")
+    schema:register(XMLValueType.FLOAT, basePath .. "#decayAmount", "Amount lost to decay of current item")
+end
+
+function ShelterMattersDecayUnit:loadFromXMLFile(xmlFile, key)
+    self.fillUnitIndex = xmlFile:getValue(key .. "#index")
+
+    self.bestBefore = { month = xmlFile:getValue(key .. ".bestBefore#month"), year = xmlFile:getValue(key .. ".bestBefore#year") }
+
+    self.wetness = xmlFile:getValue(key .. "#wetness", 0)
+    self.fillLevelFull = xmlFile:getValue(key .. "#fillLevelFull", 0)
+
+    self.decayAmount = xmlFile:getValue(key .. "#decayAmount", 0)
+
+    -- reset the bestBefore if not all properties or correctly set
+    -- this to prevent errors and saving nil values in the feature
+    if self.bestBefore.month == nil or self.bestBefore.year == nil then
+        self.bestBefore = nil -- reset the bestbefore if one of the 2 properties or not correctly set
+    end
+end
+
+function ShelterMattersDecayUnit:saveToXMLFile(xmlFile, key)
+    xmlFile:setValue(key .. "#index", self.fillUnitIndex)
+
+    if self.bestBefore ~= nil then
+        xmlFile:setValue(key .. ".bestBefore#month", self.bestBefore.month)
+        xmlFile:setValue(key .. ".bestBefore#year", self.bestBefore.year)
+    end
+
+    xmlFile:setValue(key .. "#wetness", self.wetness)
+    xmlFile:setValue(key .. "#fillLevelFull", self.fillLevelFull)
+    xmlFile:setValue(key .. "#decayAmount", self.decayAmount)
+end
+------------------------
+-- Gameplay functions --
+------------------------
 
 function ShelterMattersDecayUnit:update(elapsedInMinutes)
     local decayProps = self:getDecayProperties()

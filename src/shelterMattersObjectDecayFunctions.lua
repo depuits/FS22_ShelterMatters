@@ -98,52 +98,51 @@ end
 -----------------------------------
 
 function ShelterMattersObjectDecayFunctions.registerSavegameXMLPaths(schema, basePath)
-    --TODO
     schema:register(XMLValueType.INT, basePath .. ".lastUpdate#day", "Last update day of current item")
     schema:register(XMLValueType.FLOAT, basePath .. ".lastUpdate#time", "Last update time of current item")
 
     schema:register(XMLValueType.INT, basePath .. ".spawnTime#day", "Day when the item has spawned")
     schema:register(XMLValueType.FLOAT, basePath .. ".spawnTime#time", "Time when the item has spawned")
 
-    schema:register(XMLValueType.INT, basePath .. ".bestBefore#month", "Best before month of current item")
-    schema:register(XMLValueType.INT, basePath .. ".bestBefore#year", "Best before year of current item")
-
-    schema:register(XMLValueType.FLOAT, basePath .. "#wetness", "Wetness level of current item")
-    schema:register(XMLValueType.FLOAT, basePath .. "#fillLevelFull", "Current item fill level when it was created")
-    schema:register(XMLValueType.FLOAT, basePath .. "#decayAmount", "Amount lost to decay of current item")
+    ShelterMattersDecayUnit.registerSavegameXMLPaths(schema, basePath .. ".decayUnits.unit(?)")
 end
 
 function ShelterMattersObjectDecayFunctions.initObject(self, spec)
     spec.lastUpdate = {} -- initialize the lastUpdate as empty object to prevent errors when saving thing that have never been updated yet
+
+    spec.decayUnits = {} -- initialize empty decay unit list
+
+    -- initialize from fillUnit
+    local fillUnits = self:getFillUnits() 
+    for fillUnitIndex, fillUnit in ipairs(fillUnits) do
+        spec.decayUnits[fillUnitIndex] = ShelterMattersDecayUnit.new(self, fillUnitIndex)
+    end
 end
 
 function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
-    --TODO
-
     spec.lastUpdate = { day = xmlFile:getValue(key .. ".lastUpdate#day"), time = xmlFile:getValue(key .. ".lastUpdate#time") }
-
     spec.spawnTime = { day = xmlFile:getValue(key .. ".spawnTime#day"), time = xmlFile:getValue(key .. ".spawnTime#time") }
 
-    spec.bestBefore = { month = xmlFile:getValue(key .. ".bestBefore#month"), year = xmlFile:getValue(key .. ".bestBefore#year") }
-
-    spec.wetness = xmlFile:getValue(key .. "#wetness", 0)
-    spec.fillLevelFull = xmlFile:getValue(key .. "#fillLevelFull", 0)
-
-    spec.decayAmount = xmlFile:getValue(key .. "#decayAmount", 0)
-
-    -- reset the spawnTime and bestBefore if not all properties or correctly set
+    -- reset the spawnTime if not all properties or correctly set
     -- this to prevent errors and saving nil values in the feature
     if spec.spawnTime.day == nil or spec.spawnTime.time == nil then
         spec.spawnTime = nil
     end
 
-    if spec.bestBefore.month == nil or spec.bestBefore.year == nil then
-        spec.bestBefore = nil -- reset the bestbefore if one of the 2 properties or not correctly set
+    -- Try to load decay unit info from xml
+    local i = 0
+    for _, decayUnit in ipairs(spec.decayUnits) do
+        local decayUnitKey = string.format("%s.decayUnits.unit(%d)", key, i)
+
+        if self.xmlFile:hasProperty(decayUnitKey) then
+            decayUnit:loadFromXMLFile(xmlFile, decayUnitKey)
+        end
+
+        i = i + 1
     end
 end
 
 function ShelterMattersObjectDecayFunctions.saveToXMLFile(xmlFile, key, spec)
-    --TODO
     if spec.lastUpdate ~= nil then -- it is posible that a bale was never updated if this mod is added to an existing savegame
         xmlFile:setValue(key .. ".lastUpdate#day", spec.lastUpdate.day)
         xmlFile:setValue(key .. ".lastUpdate#time", spec.lastUpdate.time)
@@ -154,14 +153,14 @@ function ShelterMattersObjectDecayFunctions.saveToXMLFile(xmlFile, key, spec)
         xmlFile:setValue(key .. ".spawnTime#time", spec.spawnTime.time)
     end
 
-    if spec.bestBefore ~= nil then
-        xmlFile:setValue(key .. ".bestBefore#month", spec.bestBefore.month)
-        xmlFile:setValue(key .. ".bestBefore#year", spec.bestBefore.year)
-    end
+    -- Save the decay units to xml
+    local i = 0
+    for _, decayUnit in ipairs(spec.decayUnits) do
+        local decayUnitKey = string.format("%s.decayUnits.unit(%d)", key, i)
+        decayUnit:saveToXMLFile(xmlFile, decayUnitKey)
 
-    xmlFile:setValue(key .. "#wetness", spec.wetness)
-    xmlFile:setValue(key .. "#fillLevelFull", spec.fillLevelFull)
-    xmlFile:setValue(key .. "#decayAmount", spec.decayAmount)
+        i = i + 1
+    end
 end
 
 --------------------------------

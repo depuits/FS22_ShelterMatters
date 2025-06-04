@@ -39,34 +39,23 @@ function ShelterMattersBale.new(isServer, superFunc, isClient, customMt)
 end
 
 function ShelterMattersBale.loadBaleAttributesFromXMLFile(attributes, superFunc, xmlFile, key, resetVehicles)
-    --TODO
     ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, attributes)
     return superFunc(attributes, xmlFile, key, resetVehicles)
 end
 
 function ShelterMattersBale:getBaleAttributes(superFunc)
-    --TODO
     attributes = superFunc(self)
     attributes.lastUpdate = self.lastUpdate
 
-    attributes.bestBefore = self.bestBefore
-
-    attributes.wetness = self.wetness
-    attributes.fillLevelFull = self.fillLevelFull or self.fillLevel
-    attributes.decayAmount = self.decayAmount
+    attributes.decayUnits = self.decayUnits
 
     return attributes
 end
 
 function ShelterMattersBale:applyBaleAttributes(attributes)
-    --TODO
     self.lastUpdate = attributes.lastUpdate or self.lastUpdate
 
-    self:setBestBefore(attributes.bestBefore or self.bestBefore)
-
-    self:setWetness(attributes.wetness or self.wetness)
-    self:setFillLevelFull(attributes.fillLevelFull or self.fillLevelFull or self.fillLevel)
-    self:setDecayAmount(attributes.decayAmount or self.decayAmount)
+    self.decayUnits = attributes.decayUnits or self.decayUnits
 end
 
 function ShelterMattersBale.saveBaleAttributesToXMLFile(attributes, xmlFile, key)
@@ -133,6 +122,16 @@ function Bale:getDecayUnits()
     return self.decayUnits
 end
 
+-- method to help with initialization of decayUnits
+function Bale:getFillUnits()
+    return { 
+        [1] = {
+            fillType = self.fillType,
+            capacity = self.fillLevel,
+            fillLevel = self.fillLevel
+        }
+    }
+end
 
 --------------------------------
 -- multiplayer sync functions --
