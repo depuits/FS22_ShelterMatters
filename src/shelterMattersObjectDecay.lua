@@ -62,7 +62,7 @@ function ShelterMattersObjectDecay:onLoad(savegame)
 
     if savegame ~= nil then
         local baseKey = savegame.key .. "."..modName.."."..ShelterMattersObjectDecay.SPEC_NAME
-        ShelterMattersObjectDecayFunctions.loadFromXMLFile(savegame.xmlFile, baseKey, spec)
+        ShelterMattersObjectDecayFunctions.loadFromXMLFile(savegame.xmlFile, baseKey, spec, false)
     end 
 end
 

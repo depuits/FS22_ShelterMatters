@@ -44,7 +44,7 @@ function ShelterMattersObjectDecayFunctions.update(object)
     end
 
     -- run update for each fillUnit
-    for _, unit in ipairs(object:getDecayUnits) do
+    for _, unit in ipairs(object:getDecayUnits()) do
         unit:update(elapsedInMinutes)
     end
 end
@@ -119,7 +119,7 @@ function ShelterMattersObjectDecayFunctions.initObject(self, spec)
     end
 end
 
-function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
+function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec, bale)
     spec.lastUpdate = { day = xmlFile:getValue(key .. ".lastUpdate#day"), time = xmlFile:getValue(key .. ".lastUpdate#time") }
     spec.spawnTime = { day = xmlFile:getValue(key .. ".spawnTime#day"), time = xmlFile:getValue(key .. ".spawnTime#time") }
 
@@ -129,12 +129,17 @@ function ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, spec)
         spec.spawnTime = nil
     end
 
+    if spec.decayUnits == nil and bale then
+        -- decayUnits can be nil when loading xml from placeable storage instead of item
+        spec.decayUnits = { ShelterMattersDecayUnit.new(spec, 1) }
+    end
+
     -- Try to load decay unit info from xml
     local i = 0
     for _, decayUnit in ipairs(spec.decayUnits) do
         local decayUnitKey = string.format("%s.decayUnits.unit(%d)", key, i)
 
-        if self.xmlFile:hasProperty(decayUnitKey) then
+        if xmlFile:hasProperty(decayUnitKey) then
             decayUnit:loadFromXMLFile(xmlFile, decayUnitKey)
         end
 

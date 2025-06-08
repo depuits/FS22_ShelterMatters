@@ -143,28 +143,28 @@ end
 -- data access and manipulation functions --
 --------------------------------------------
 
-function ShelterMattersObjectDecay:reset()
+function ShelterMattersDecayUnit:reset()
     self:setWetness(0)
     self:setFillLevelFull(0)
     self:setDecayAmount(0)
     self:setBestBefore(nil)
 end
 
-function ShelterMattersObjectDecay:markDirty()
+function ShelterMattersDecayUnit:markDirty()
     if self.object.isServer then
         self.object:raiseDirtyFlags(self.dirtyFlag)
     end
 end
 
-function ShelterMattersObjectDecay:getWetness()
+function ShelterMattersDecayUnit:getWetness()
     return self.wetness
 end
-function ShelterMattersObjectDecay:setWetness(wetness)
+function ShelterMattersDecayUnit:setWetness(wetness)
     self.wetness = MathUtil.clamp(wetness, 0, 1)
     self:markDirty()
 end
 
-function ShelterMattersObjectDecay:getFillLevelFull()
+function ShelterMattersDecayUnit:getFillLevelFull()
     --  always get the current fill level
     local currentFillLevel = self.object:smGetFillLevel(self.fillUnitIndex)
 
@@ -185,12 +185,12 @@ function ShelterMattersObjectDecay:getFillLevelFull()
 
     return self.fillLevelFull
 end
-function ShelterMattersObjectDecay:setFillLevelFull(fillLevelFull)
+function ShelterMattersDecayUnit:setFillLevelFull(fillLevelFull)
     self.fillLevelFull = fillLevelFull
     self:markDirty()
 end
 
-function ShelterMattersObjectDecay:getBestBefore()
+function ShelterMattersDecayUnit:getBestBefore()
     if self.bestBefore ~= nil then
         return self.bestBefore
     end
@@ -216,7 +216,7 @@ function ShelterMattersObjectDecay:getBestBefore()
 
     return self.bestBefore
 end
-function ShelterMattersObjectDecay:setBestBefore(bestBefore)
+function ShelterMattersDecayUnit:setBestBefore(bestBefore)
     self.bestBefore = bestBefore
 
     -- if the bestbefore is not valid then we clear it
@@ -227,27 +227,27 @@ function ShelterMattersObjectDecay:setBestBefore(bestBefore)
     self:markDirty()
 end
 
-function ShelterMattersObjectDecay:addDecayAmount(decayAmount)
+function ShelterMattersDecayUnit:addDecayAmount(decayAmount)
     self:getFillLevelFull() -- getting fillLevelFull here to make sure it is updated
 
     self:setDecayAmount(self.decayAmount + decayAmount)
 
     self.object:smAddFillLevel(self.fillUnitIndex, decayAmount * -1)
 end
-function ShelterMattersObjectDecay:getDecayAmount()
+function ShelterMattersDecayUnit:getDecayAmount()
     return self.decayAmount
 end
-function ShelterMattersObjectDecay:setDecayAmount(decayAmount)
+function ShelterMattersDecayUnit:setDecayAmount(decayAmount)
     self.decayAmount = MathUtil.clamp(decayAmount, 0, self:getFillLevelFull())
     self:markDirty()
 end
 
-function ShelterMattersObjectDecay:getDecayProperties()
+function ShelterMattersDecayUnit:getDecayProperties()
     local fillTypeIndex = self.object:smGetFillType(self.fillUnitIndex)
     return ShelterMatters.decayProperties[fillTypeIndex]
 end
 
-function ShelterMattersObjectDecay:isAffectedByWetness()
+function ShelterMattersDecayUnit:isAffectedByWetness()
     -- only things with a decay rate are affected by wetness
     local decayProps = self:getDecayProperties()
 
@@ -257,7 +257,7 @@ function ShelterMattersObjectDecay:isAffectedByWetness()
         self.object:smIsAffectedByWeather()
 end
 
-function ShelterMattersObjectDecay:isAffectedByTemperature()
+function ShelterMattersDecayUnit:isAffectedByTemperature()
     -- only things with a decay rate are affected by wetness
     local decayProps = self:getDecayProperties()
 

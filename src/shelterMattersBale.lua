@@ -39,7 +39,7 @@ function ShelterMattersBale.new(isServer, superFunc, isClient, customMt)
 end
 
 function ShelterMattersBale.loadBaleAttributesFromXMLFile(attributes, superFunc, xmlFile, key, resetVehicles)
-    ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, attributes)
+    ShelterMattersObjectDecayFunctions.loadFromXMLFile(xmlFile, key, attributes, true)
     return superFunc(attributes, xmlFile, key, resetVehicles)
 end
 
