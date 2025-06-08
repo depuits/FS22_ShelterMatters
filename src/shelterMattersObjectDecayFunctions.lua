@@ -54,7 +54,10 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
     -- TODO display highest min and lowest max values of all units
     -- TODO display combined decay value (add all decay amounts and filllevelFulls)
     -- TODO display avarage wetness
+    local decay = object:getDecayUnits()
+    box:addLine("decay units", tostring(#decay))
 
+--[[
     -- display best by date
     local bb = object:getBestBefore()
     ShelterMattersHelpers.infoBoxAddBestBefore(box, bb)
@@ -90,7 +93,7 @@ function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
 
     if decayPercentage > 0 then
         box:addLine(g_i18n:getText("SM_InfoDecay"), string.format("%d%%", decayPercentage * 100))
-    end
+    end]]
 end
 
 -----------------------------------
