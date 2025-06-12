@@ -6,6 +6,7 @@ function ShelterMattersBale.registerFunctions()
     -- custom logic method overwrites
     Bale.new = Utils.overwrittenFunction(Bale.new, ShelterMattersBale.new)
     Bale.showInfo = Utils.appendedFunction(Bale.showInfo, ShelterMattersBale.showInfo)
+    Bale.setFillType = Utils.overwrittenFunction(Bale.setFillType, ShelterMattersBale.setFillType)
 
     -- saving overwrites
     Bale.registerSavegameXMLPaths = Utils.appendedFunction(Bale.registerSavegameXMLPaths, ShelterMattersBale.registerSavegameXMLPaths)
@@ -76,6 +77,17 @@ end
 --------------------------------------------
 -- data access and manipulation functions --
 --------------------------------------------
+
+function ShelterMattersBale:setFillType(superFunc, fillTypeIndex, fillBale)
+    local fillTypeChange = (self.fillType ~= fillTypeIndex)
+
+    superFunc(self, fillTypeIndex, fillBale)
+
+    if fillTypeChange then
+        -- only reset best before if fillType has changed
+        self.decayUnits[1].setBestBefore(nil)
+    end
+end
 
 function Bale:getLastDecayUpdate()
     return self.lastUpdate
