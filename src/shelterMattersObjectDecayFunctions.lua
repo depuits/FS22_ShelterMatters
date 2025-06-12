@@ -50,50 +50,78 @@ function ShelterMattersObjectDecayFunctions.update(object)
 end
 
 function ShelterMattersObjectDecayFunctions.infoBoxAddInfo(box, object)
-    -- TODO display first bestBefore
-    -- TODO display highest min and lowest max values of all units
-    -- TODO display combined decay value (add all decay amounts and filllevelFulls)
-    -- TODO display avarage wetness
-    local decay = object:getDecayUnits()
-    box:addLine("decay units", tostring(#decay))
+    local totalFill = 0
+    local totalDecay = 0
+    local totalWetness = 0
+    local wetnessWeight = 0
+    local bestBefore = nil
+    local minTemp = nil
+    local maxTemp = nil
+    local isAffectedByWetness = false
 
---[[
-    -- display best by date
-    local bb = object:getBestBefore()
-    ShelterMattersHelpers.infoBoxAddBestBefore(box, bb)
+    for _, unit in pairs(object:getDecayUnits()) do
+        local fillLevel = unit:getFillLevel()
+        if fillLevel > 0 then
+            -- Best before: earliest one
+            local unitBestBefore = unit:getBestBefore()
+            if unitBestBefore and ( not bestBefore or
+                unitBestBefore.year < bestBefore.year or
+                (unitBestBefore.year == bestBefore.year and unitBestBefore.month < bestBefore.month)
+            ) then
+                bestBefore = unit.bestBefore
+            end
 
-    local decayProps = object:getDecayProperties()
+            if unit:isAffectedByTemperature() then
+                local decayProps = unit:getDecayProperties()
+                -- Temperature range
+                if decayProps.minTemperature then
+                    minTemp = math.max(minTemp or -math.huge, decayProps.minTemperature)
+                end
+                if decayProps.maxTemperature then
+                    maxTemp = math.min(maxTemp or math.huge, decayProps.maxTemperature)
+                end
+            end
 
-    -- display wetness in info box
-    if object:getWetness() > 0 or object:isAffectedByWetness() then
-        ShelterMattersHelpers.infoBoxAddWetness(box, object:getWetness())
-    end
+            -- Total decay
+            totalFill = totalFill + unit:getFillLevelFull()
+            totalDecay = totalDecay + (unit.decayAmount or 0)
 
-    -- display temperature in info box
-    if object:isAffectedByTemperature() then
-        local decayProps = object:getDecayProperties()
-        local hasMaxTemp = decayProps ~= nil and decayProps.maxTemperature ~= nil and decayProps.maxTemperatureDecay ~= nil and decayProps.maxTemperatureDecay > 0
-        local hasMinTemp = decayProps ~= nil and decayProps.minTemperature ~= nil and decayProps.minTemperatureDecay ~= nil and decayProps.minTemperatureDecay > 0
-
-        if hasMaxTemp and hasMinTemp then
-            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s - %s", g_i18n:formatTemperature(decayProps.minTemperature, 0), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
-        elseif hasMaxTemp then
-            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMax"), g_i18n:formatTemperature(decayProps.maxTemperature, 0)))
-        elseif hasMinTemp then
-            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMin"), g_i18n:formatTemperature(decayProps.minTemperature, 0)))
+            -- Weighted wetness
+            if unit:isAffectedByWetness() then
+                isAffectedByWetness = true
+                local unitWetness = unit:getWetness()
+                if unitWetness then
+                    totalWetness = totalWetness + unitWetness * fillLevel
+                    wetnessWeight = wetnessWeight + fillLevel
+                end
+            end
         end
     end
 
-    -- display decay in info box
-    local decayPercentage = 0
-    local fillLevelFull = object:getFillLevelFull()
-    if fillLevelFull > 0 then 
-        decayPercentage = object:getDecayAmount() / fillLevelFull
+    -- If no valid units, display nothing
+    if totalFill <= 0 then return end
+
+    ShelterMattersHelpers.infoBoxAddBestBefore(box, bestBefore)
+
+    if wetnessWeight > 0 or isAffectedByWetness then
+        local avgWetness = (totalWetness / wetnessWeight) * 100
+        ShelterMattersHelpers.infoBoxAddWetness(box, avgWetness)
     end
 
-    if decayPercentage > 0 then
-        box:addLine(g_i18n:getText("SM_InfoDecay"), string.format("%d%%", decayPercentage * 100))
-    end]]
+    if object:smIsAffectedByWeather() then
+        if minTemp and maxTemp then
+            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s - %s", g_i18n:formatTemperature(minTemp, 0), g_i18n:formatTemperature(maxTemp, 0)))
+        elseif maxTemp then
+            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMax"), g_i18n:formatTemperature(maxTemp, 0)))
+        elseif minTemp then
+            box:addLine(g_i18n:getText("SM_InfoTemperature"), string.format("%s %s", g_i18n:getText("SM_InfoMin"), g_i18n:formatTemperature(minTemp, 0)))
+        end
+    end
+
+    local decayPercent = (totalDecay / totalFill) * 100
+    if decayPercent > 0 then
+        box:addLine(g_i18n:getText("SM_InfoDecay"), string.format("%d%%", decayPercent))
+    end
 end
 
 -----------------------------------

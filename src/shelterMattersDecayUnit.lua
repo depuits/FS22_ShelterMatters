@@ -164,9 +164,13 @@ function ShelterMattersDecayUnit:setWetness(wetness)
     self:markDirty()
 end
 
+function ShelterMattersDecayUnit:getFillLevel()
+    return self.object:smGetFillLevel(self.fillUnitIndex)
+end
+
 function ShelterMattersDecayUnit:getFillLevelFull()
     --  always get the current fill level
-    local currentFillLevel = self.object:smGetFillLevel(self.fillUnitIndex)
+    local currentFillLevel = self:getFillLevel()
 
     if currentFillLevel ~= nil and currentFillLevel > self.fillLevelFull then
         -- when the fill level increases this indicates that the pallet is not yet full
